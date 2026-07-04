@@ -10,12 +10,10 @@ import {
 } from '../lib/tracking';
 import { 
   ChevronRight, 
+  ShieldCheck, 
   RotateCcw,
   Sparkles,
-  Clock,
-  Activity,
-  CheckCircle2,
-  Lock
+  ChevronLeft
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -190,6 +188,12 @@ export default function QuizWizard({ initialProfile = null }: QuizWizardProps) {
       setCurrentStep('quiz');
       setQuestionIndex(0);
       trackStepTransition('quiz');
+    } else {
+      if (activeSession.current_step && activeSession.current_step !== 'landing' && activeSession.current_step !== 'thank-you' && activeSession.current_step !== 'purchased' && activeSession.current_step !== 'processing') {
+        setSavedStep(activeSession.current_step);
+        setSavedProfile(activeSession.profile || null);
+        setShowResumeBanner(true);
+      }
     }
   }, [initialProfile]);
 
@@ -231,6 +235,28 @@ export default function QuizWizard({ initialProfile = null }: QuizWizardProps) {
     setCurrentStep('q1_split');
   };
 
+  // Voltar pergunta no Quiz
+  const handleGoBack = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+
+    if (currentStep === 'quiz') {
+      if (questionIndex > 0) {
+        // Decrementa o index da pergunta
+        setQuestionIndex(prev => prev - 1);
+      } else {
+        // Se começou o quiz nas rotas /s ou /n, manda de volta para a landing geral
+        if (initialProfile) {
+          router.push('/');
+        } else {
+          setCurrentStep('q1_split');
+        }
+      }
+    } else if (currentStep === 'q1_split') {
+      setCurrentStep('landing');
+    }
+  };
+
   // Trata resposta da pergunta 1 (Divisor de águas) -> Redireciona de fato para /s ou /n!
   const handleSplitAnswer = (isConfirmed: boolean) => {
     if (isTransitioning) return;
@@ -255,7 +281,6 @@ export default function QuizWizard({ initialProfile = null }: QuizWizardProps) {
     const activeQuestions = profile === 'confirmed' ? QUESTIONS_CONFIRMED : QUESTIONS_SUSPECT;
     const answersToMerge = { [questionId]: option.text };
 
-    // Validar se o índice está dentro dos limites para evitar quebras de DOM no React
     if (questionIndex < activeQuestions.length - 1) {
       const updated = trackStepTransition('quiz', answersToMerge, option.score);
       setSession(updated);
@@ -302,7 +327,6 @@ export default function QuizWizard({ initialProfile = null }: QuizWizardProps) {
         clearInterval(progressInterval);
         clearInterval(msgInterval);
         
-        // Redireciona diretamente para a landing page final correta (/s-lp ou /n-lp)
         if (profile === 'confirmed') {
           trackStepTransition('offer');
           router.push('/s-lp');
@@ -337,14 +361,62 @@ export default function QuizWizard({ initialProfile = null }: QuizWizardProps) {
 
   return (
     <div className="flex-1 w-full flex flex-col justify-start">
-      <div className={`w-full max-w-md mx-auto ${currentStep === 'landing' ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-white shadow-xl border-x border-gray-100 flex flex-col justify-between relative`}>
+      <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl border-x border-gray-100 flex flex-col justify-between relative overflow-y-auto animate-fadeIn">
+        
+        {/* Banner de Recuperação */}
+        <AnimatePresence>
+          {showResumeBanner && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-0 inset-x-0 z-50 bg-[#2E7D32] text-white p-4 shadow-lg text-sm flex flex-col gap-3"
+            >
+              <div className="flex items-start gap-2">
+                <RotateCcw className="w-5 h-5 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Teste em andamento! 🥛</p>
+                  <p className="text-gray-100 text-xs font-medium">Deseja retomar o seu teste de intolerância de onde parou?</p>
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button 
+                  onClick={handleRestart} 
+                  className="px-3 py-1.5 rounded bg-transparent border border-white/50 text-white font-medium text-xs hover:bg-white/10 transition"
+                >
+                  Começar do Zero
+                </button>
+                <button 
+                  onClick={handleResume} 
+                  className="px-3 py-1.5 rounded bg-white text-[#2E7D32] font-semibold text-xs hover:bg-gray-100 transition shadow"
+                >
+                  Continuar
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Cabeçalho */}
         <header className="py-4 px-6 bg-white border-b border-gray-100 shrink-0">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              {/* Botão de Voltar */}
+              {currentStep !== 'landing' && currentStep !== 'processing' && (
+                <button
+                  onClick={handleGoBack}
+                  className="mr-2 text-gray-400 hover:text-gray-700 transition-all flex items-center gap-1 text-xs font-bold active:scale-95"
+                >
+                  <ChevronLeft className="w-4.5 h-4.5" />
+                  <span>Voltar</span>
+                </button>
+              )}
               <span className="w-3 h-3 rounded-full bg-[#2E7D32] animate-pulse" />
               <span className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">Diagnóstico Lactose</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-gray-400 font-medium">
+              <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
+              <span>100% Seguro</span>
             </div>
           </div>
           
@@ -362,7 +434,7 @@ export default function QuizWizard({ initialProfile = null }: QuizWizardProps) {
         </header>
 
         {/* Conteúdo Principal */}
-        <main className={`flex-1 flex flex-col justify-center p-6 ${currentStep === 'landing' ? 'py-1.5 px-5' : ''}`}>
+        <main className="flex-1 flex flex-col justify-start md:justify-center py-8 px-6">
           <AnimatePresence mode="wait">
             
             {/* TELA INICIAL */}
@@ -372,76 +444,35 @@ export default function QuizWizard({ initialProfile = null }: QuizWizardProps) {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
-                className="space-y-3 text-center py-1 flex flex-col justify-between h-full"
+                className="space-y-6 text-center py-4"
               >
-                {/* Badge de Destaque */}
-                <div>
-                  <div className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 text-emerald-800 px-3 py-1.5 rounded-full text-xs font-bold shadow-xs">
-                    <span>🔎 Teste de Sensibilidade à Lactose</span>
-                  </div>
+                <div className="inline-flex items-center gap-1.5 bg-[#E8F5E9] text-[#2E7D32] px-3 py-1.5 rounded-full text-xs font-bold">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Análise de Sintomas Digestivos 🥗</span>
                 </div>
                 
-                {/* Título Principal (Headline) */}
-                <h1 className="text-[38px] font-extrabold tracking-[-0.03em] text-[#111827] leading-[1.1] max-w-[12ch] mx-auto">
-                  Seu corpo pode estar reagindo à lactose e você nem percebeu.
+                <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 leading-tight">
+                  Você sente desconforto depois de consumir leite, queijo ou pizza?
                 </h1>
                 
-                {/* Imagem de Capa do Quiz (Foto - Altura reduzida para h-40 para evitar cortes em telas menores) */}
-                <div className="relative overflow-hidden rounded-2xl border border-gray-100 shadow-md">
-                  <img 
-                    src="/lactose_free_banner.jpg" 
-                    alt="Café da manhã saudável sem lactose" 
-                    className="w-full h-40 object-cover hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-                </div>
-
-                {/* Texto de Apoio (Subheadline) */}
-                <p className="text-[18px] font-medium leading-[1.5] text-[#4B5563] px-2">
-                  Responda algumas perguntas rápidas e descubra se seus sintomas podem estar relacionados à lactose.
+                <p className="text-sm text-gray-600 leading-relaxed font-medium">
+                  Milhares de pessoas convivem com sintomas digestivos sem perceber que alguns alimentos podem estar contribuindo para isso.
                 </p>
-                
-                {/* Grade de Benefícios / Destaques (2 cards verticais com a mesma altura) */}
-                <div className="space-y-2 text-left">
-                  {/* Card 1 */}
-                  <div className="flex flex-col justify-center gap-1 bg-gray-50 border border-gray-100 p-3.5 h-[88px] rounded-[16px] transition hover:bg-gray-100/70">
-                    <h3 className="text-[17px] font-bold text-[#111827] flex items-center gap-1.5 leading-none">
-                      <span>⏱️</span> 50 segundos
-                    </h3>
-                    <p className="text-[15px] font-medium text-[#6B7280] leading-tight">
-                      Resultado imediato.
-                    </p>
-                  </div>
-                  
-                  {/* Card 2 */}
-                  <div className="flex flex-col justify-center gap-1 bg-gray-50 border border-gray-100 p-3.5 h-[88px] rounded-[16px] transition hover:bg-gray-100/70">
-                    <h3 className="text-[17px] font-bold text-[#111827] flex items-center gap-1.5 leading-none">
-                      <span>🥛</span> Sintomas comuns
-                    </h3>
-                    <p className="text-[15px] font-medium text-[#6B7280] leading-tight">
-                      Veja se a lactose pode estar contribuindo para seus desconfortos.
-                    </p>
-                  </div>
-                </div>
+                <p className="text-sm font-semibold text-gray-700">
+                  Responda o teste abaixo e descubra em menos de 1 minuto.
+                </p>
 
-                {/* Seção do Botão e Chamada de Ação */}
-                <div className="space-y-2">
+                <div className="pt-4 space-y-3">
                   <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    animate={{ scale: [1, 1.015, 1] }}
-                    transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={startQuiz}
                     disabled={isTransitioning}
-                    className={`w-full bg-gradient-to-r from-[#2E7D32] to-[#1B5E20] hover:from-[#1B5E20] hover:to-[#0E3A11] text-white h-[68px] rounded-[18px] font-bold text-[22px] tracking-[-0.02em] shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer ${isTransitioning ? 'pointer-events-none opacity-80' : ''}`}
+                    className={`w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white py-4 px-6 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 group ${isTransitioning ? 'pointer-events-none opacity-80' : ''}`}
                   >
-                    <span>Começar Análise Gratuita</span>
-                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
+                    <span>Começar Agora</span>
+                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </motion.button>
-                  
-                  {/* Subtext de tempo */}
-                  <p className="text-xs text-gray-400 font-semibold">
-                    Leva menos de 1 minuto.
-                  </p>
+                  <p className="text-xs text-gray-400 font-medium">Leva apenas 60 segundos.</p>
                 </div>
               </motion.div>
             )}
@@ -574,13 +605,14 @@ export default function QuizWizard({ initialProfile = null }: QuizWizardProps) {
         </main>
 
         {/* Rodapé */}
-        {currentStep !== 'landing' && (
-          <footer className="py-3 px-6 bg-white border-t border-gray-100 text-center shrink-0">
-            <p className="text-[9px] text-gray-400 font-medium">
-              © 2026 Receitas Sem Lactose. Todos os direitos reservados.
-            </p>
-          </footer>
-        )}
+        <footer className="py-4 px-6 bg-white border-t border-gray-100 text-center shrink-0">
+          <p className="text-[9px] text-gray-400 leading-normal font-medium">
+            Este site não é afiliado ao Facebook ou a qualquer entidade do Facebook.
+          </p>
+          <p className="text-[9px] text-gray-400 mt-1 font-medium">
+            © 2026 Receitas Sem Lactose. Todos os direitos reservados.
+          </p>
+        </footer>
       </div>
     </div>
   );

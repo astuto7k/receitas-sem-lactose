@@ -20,7 +20,9 @@ import {
   Phone,
   CheckCircle2,
   AlertCircle,
-  Sparkles
+  Grid,
+  TrendingDown,
+  ListFilter
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -34,8 +36,11 @@ export default function AdminDashboard() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   
-  // Novo filtro por perfil
+  // Filtros de Perfil
   const [profileFilter, setProfileFilter] = useState<'all' | 'confirmed' | 'suspect'>('all');
+
+  // Abas do Painel para melhor organização
+  const [activeTab, setActiveTab] = useState<'overview' | 'funnel' | 'utm' | 'times' | 'leads'>('overview');
 
   // Carregar dados de autenticação
   useEffect(() => {
@@ -106,14 +111,18 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, filterType, startDate, endDate]);
 
-  // Função para popular dados de simulação otimizado para o novo fluxo Sim/Não
+  // Função para popular dados de simulação com parâmetros UTM
   const seedDemoData = () => {
     if (typeof window === 'undefined') return;
     
     const demoSessions: any[] = [];
     const now = Date.now();
     
-    // Gerar 200 visitas simuladas distribuídas nos últimos 30 dias
+    const utmCampaigns = ['Campanha Lactose Fria', 'Campanha Lactose Quente', 'Campanha Remarketing Facebook', 'Orgânico'];
+    const utmSources = ['facebook', 'facebook', 'instagram', 'google', 'direct'];
+    const utmMediums = ['cpc', 'cpc', 'cpm', 'organic', 'none'];
+    const utmContents = ['Ad 01 - Pizza Queijo', 'Ad 02 - Barriga Inchada', 'Ad 03 - Viver Sem Lactose', 'none'];
+
     for (let i = 0; i < 200; i++) {
       const id = 'demo-session-' + i;
       const createdTime = now - Math.random() * 30 * 24 * 60 * 60 * 1000;
@@ -131,12 +140,19 @@ export default function AdminDashboard() {
       let revenue = 0;
       let whatsapp = undefined;
       
-      // Decidir perfil (Sim/Não)
+      // Decidir perfil
       const profile = Math.random() > 0.5 ? 'confirmed' : 'suspect';
-
       const rand = Math.random();
 
-      if (rand > 0.05) { // 95% iniciam o quiz (Q1 Split)
+      // Atribuir parâmetros UTM
+      const utmIndex = Math.floor(Math.random() * utmCampaigns.length);
+      const utm_campaign = utmCampaigns[utmIndex];
+      const utm_source = utmSources[utmIndex] || 'direct';
+      const utm_medium = utmMediums[utmIndex] || 'none';
+      const utm_content = utmContents[Math.floor(Math.random() * utmContents.length)];
+      const fbclid = utm_source === 'facebook' ? 'fb_' + Math.random().toString(36).substring(7) : undefined;
+
+      if (rand > 0.05) { // 95% iniciam o quiz
         current_step = 'q1_split';
         answers.q1_diagnostico = profile === 'confirmed' ? 'Sim, já tenho certeza' : 'Não, apenas suspeito pelos sintomas';
         time_spent.q1_split = Math.round(1500 + Math.random() * 3000);
@@ -208,33 +224,26 @@ export default function AdminDashboard() {
                       score += 5;
                     }
                     
-                    if (rand > 0.75) { // Lead
-                      current_step = 'lead';
-                      if (Math.random() > 0.25) { // 75% deixam whats
-                        whatsapp = `(11) 9${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
-                      }
+                    if (rand > 0.75) { // Processing / Offer
+                      current_step = 'offer';
                       
-                      if (rand > 0.80) { // Offer / Result
-                        current_step = 'offer';
+                      if (rand > 0.82) { // Checkout
+                        current_step = 'checkout';
+                        checkout_initiated = true;
+                        order_bump_selected = Math.random() > 0.65;
                         
-                        if (rand > 0.88) { // Checkout
-                          current_step = 'checkout';
-                          checkout_initiated = true;
-                          order_bump_selected = Math.random() > 0.65; // 35% selecionam bump
+                        if (rand > 0.90) { // Purchase
+                          current_step = 'thank-you';
+                          purchased = true;
+                          revenue = 27.90 + (order_bump_selected ? 9.90 : 0);
                           
-                          if (rand > 0.94) { // Purchase
-                            current_step = 'thank-you';
-                            purchased = true;
-                            revenue = 27.90 + (order_bump_selected ? 9.90 : 0);
-                            
-                            if (Math.random() > 0.75) { 
-                              upsell1_purchased = true;
-                              revenue += 27.00;
-                            }
-                            if (Math.random() > 0.85) { 
-                              upsell2_purchased = true;
-                              revenue += 37.00;
-                            }
+                          if (Math.random() > 0.75) { 
+                            upsell1_purchased = true;
+                            revenue += 27.00;
+                          }
+                          if (Math.random() > 0.85) { 
+                            upsell2_purchased = true;
+                            revenue += 37.00;
                           }
                         }
                       }
@@ -262,12 +271,17 @@ export default function AdminDashboard() {
         purchased,
         upsell1_purchased,
         upsell2_purchased,
-        revenue
+        revenue,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        utm_content,
+        fbclid
       });
     }
 
     localStorage.setItem('mock_supabase_quiz_sessions', JSON.stringify(demoSessions));
-    alert('Dados de simulação gerados com sucesso no LocalStorage! O painel será atualizado.');
+    alert('Dados de simulação com parâmetros UTM gerados no LocalStorage!');
     fetchSessions();
   };
 
@@ -281,14 +295,14 @@ export default function AdminDashboard() {
   const exportToCSV = () => {
     if (sessions.length === 0) return;
     
-    const headers = ['ID', 'Criado Em', 'Perfil', 'Etapa Atual', 'WhatsApp', 'Pontuação', 'Abriu Checkout', 'Order Bump?', 'Comprou?', 'Receita Total'];
+    const headers = ['ID', 'Criado Em', 'Perfil', 'Etapa Atual', 'Origem', 'Campanha', 'Checkout', 'Bump?', 'Comprou?', 'Faturamento'];
     const rows = sessions.map(s => [
       s.id,
       s.created_at,
       s.profile || 'Desconhecido',
       s.current_step,
-      s.whatsapp || '',
-      s.score,
+      s.utm_source || 'Direto',
+      s.utm_campaign || 'Nenhuma',
       s.checkout_initiated ? 'Sim' : 'Não',
       s.order_bump_selected ? 'Sim' : 'Não',
       s.purchased ? 'Sim' : 'Não',
@@ -301,19 +315,18 @@ export default function AdminDashboard() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `quiz_sem_lactose_analiticos_${filterType}_${profileFilter}.csv`);
+    link.setAttribute("download", `quiz_sem_lactose_${filterType}_${profileFilter}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   // CALCULAR MÉTRICAS DO FUNIL FILTRADAS
-  const getFunnelMetrics = () => {
-    // Filtrar sessões pelo perfil
-    const filteredSessions = sessions.filter(s => 
-      profileFilter === 'all' || s.profile === profileFilter
-    );
+  const filteredSessions = sessions.filter(s => 
+    profileFilter === 'all' || s.profile === profileFilter
+  );
 
+  const getFunnelMetrics = () => {
     const total = filteredSessions.length;
     if (total === 0) {
       return {
@@ -325,7 +338,6 @@ export default function AdminDashboard() {
         q5: 0,
         q6: 0,
         q7: 0,
-        lead: 0,
         resultado: 0,
         checkout: 0,
         compra: 0,
@@ -339,69 +351,21 @@ export default function AdminDashboard() {
     }
 
     const visitas = total;
-
-    // Pergunta 1 (Split): Qualquer um que saiu da landing
     const q1 = filteredSessions.filter(s => s.current_step !== 'landing').length;
-    
-    // Pergunta 2: Tem resposta Q1 ou passou do split
-    const q2 = filteredSessions.filter(s => 
-      s.answers?.q1_diagnostico || !['landing', 'q1_split', 'q1'].includes(s.current_step)
-    ).length;
-    
-    // Pergunta 3: Respondeu Q2
-    const q3 = filteredSessions.filter(s => 
-      s.answers?.q2_conf || s.answers?.q2_susp || s.answers?.q2
-    ).length;
-    
-    // Pergunta 4: Respondeu Q3
-    const q4 = filteredSessions.filter(s => 
-      s.answers?.q3_conf || s.answers?.q3_susp || s.answers?.q3
-    ).length;
-    
-    // Pergunta 5: Respondeu Q4
-    const q5 = filteredSessions.filter(s => 
-      s.answers?.q4_conf || s.answers?.q4_susp || s.answers?.q4
-    ).length;
-
-    // Pergunta 6: Respondeu Q5
-    const q6 = filteredSessions.filter(s => 
-      s.answers?.q5_conf || s.answers?.q5_susp || s.answers?.q5
-    ).length;
-
-    // Pergunta 7: Respondeu Q6
-    const q7 = filteredSessions.filter(s => 
-      s.answers?.q6_conf || s.answers?.q6_susp
-    ).length;
-
-    // Lead Capture: Respondeu Q7 ou passou para lead/processing/offer...
-    const lead = filteredSessions.filter(s => 
-      s.answers?.q7_conf || s.answers?.q7_susp || 
-      ['lead', 'processing', 'offer', 'checkout', 'thank-you', 'purchased'].includes(s.current_step)
-    ).length;
-
-    // Resultado: Chegou na oferta
-    const resultado = filteredSessions.filter(s => 
-      ['offer', 'checkout', 'thank-you', 'purchased'].includes(s.current_step)
-    ).length;
-
-    // Checkout
-    const checkout = filteredSessions.filter(s => 
-      s.checkout_initiated || ['checkout', 'thank-you', 'purchased'].includes(s.current_step)
-    ).length;
-
-    // Compra
+    const q2 = filteredSessions.filter(s => s.answers?.q1_diagnostico || !['landing', 'q1_split', 'q1'].includes(s.current_step)).length;
+    const q3 = filteredSessions.filter(s => s.answers?.q2_conf || s.answers?.q2_susp || s.answers?.q2).length;
+    const q4 = filteredSessions.filter(s => s.answers?.q3_conf || s.answers?.q3_susp || s.answers?.q3).length;
+    const q5 = filteredSessions.filter(s => s.answers?.q4_conf || s.answers?.q4_susp || s.answers?.q4).length;
+    const q6 = filteredSessions.filter(s => s.answers?.q5_conf || s.answers?.q5_susp || s.answers?.q5).length;
+    const q7 = filteredSessions.filter(s => s.answers?.q6_conf || s.answers?.q6_susp).length;
+    const resultado = filteredSessions.filter(s => ['offer', 'checkout', 'thank-you', 'purchased'].includes(s.current_step) || s.answers?.q7_conf || s.answers?.q7_susp).length;
+    const checkout = filteredSessions.filter(s => s.checkout_initiated || ['checkout', 'thank-you', 'purchased'].includes(s.current_step)).length;
     const compra = filteredSessions.filter(s => s.purchased).length;
 
-    // Taxa de conclusão
     const completionRate = q1 > 0 ? (resultado / q1) * 100 : 0;
-
-    // CTR do Botão de Oferta
     const checkoutCTR = resultado > 0 ? (checkout / resultado) * 100 : 0;
-
-    // Receita
     const revenue = filteredSessions.reduce((acc, curr) => acc + (curr.revenue || 0), 0);
 
-    // Calcular tempos médios de resposta por pergunta (em segundos)
     const getAvgTimeForStep = (stepNames: string[]) => {
       const stepTimes = filteredSessions
         .flatMap(s => stepNames.map(name => s.time_spent?.[name]))
@@ -421,7 +385,6 @@ export default function AdminDashboard() {
       q7: getAvgTimeForStep(['q7_conf', 'q7_susp'])
     };
 
-    // CALCULAR MAIOR PONTO DE ABANDONO DO FUNIL
     const funnelSteps = [
       { name: 'Início do Quiz', count: visitas, nextCount: q1 },
       { name: 'Pergunta 1 (Split)', count: q1, nextCount: q2 },
@@ -430,8 +393,7 @@ export default function AdminDashboard() {
       { name: 'Pergunta 4', count: q4, nextCount: q5 },
       { name: 'Pergunta 5', count: q5, nextCount: q6 },
       { name: 'Pergunta 6', count: q6, nextCount: q7 },
-      { name: 'Pergunta 7', count: q7, nextCount: lead },
-      { name: 'Captura Lead', count: lead, nextCount: resultado },
+      { name: 'Pergunta 7', count: q7, nextCount: resultado },
       { name: 'Resultado/Oferta', count: resultado, nextCount: checkout },
       { name: 'Checkout', count: checkout, nextCount: compra }
     ];
@@ -458,7 +420,6 @@ export default function AdminDashboard() {
       q5,
       q6,
       q7,
-      lead,
       resultado,
       checkout,
       compra,
@@ -477,6 +438,50 @@ export default function AdminDashboard() {
     if (prev === 0) return 0;
     return ((prev - curr) / prev) * 100;
   };
+
+  // PROCESSAR DADOS DE CAMPANHAS E UTMS (Facebook Ads, etc.)
+  const getUtmMetrics = () => {
+    const campaignMap: Record<string, { visits: number, checkouts: number, purchases: number, revenue: number }> = {};
+    const sourceMap: Record<string, { visits: number, checkouts: number, purchases: number, revenue: number }> = {};
+    const contentMap: Record<string, { visits: number, checkouts: number, purchases: number, revenue: number }> = {};
+
+    filteredSessions.forEach(s => {
+      const camp = s.utm_campaign || 'Direto / Sem Campanha';
+      const src = s.utm_source || 'direto';
+      const cont = s.utm_content || 'Nenhum anúncio';
+
+      if (!campaignMap[camp]) campaignMap[camp] = { visits: 0, checkouts: 0, purchases: 0, revenue: 0 };
+      if (!sourceMap[src]) sourceMap[src] = { visits: 0, checkouts: 0, purchases: 0, revenue: 0 };
+      if (!contentMap[cont]) contentMap[cont] = { visits: 0, checkouts: 0, purchases: 0, revenue: 0 };
+
+      campaignMap[camp].visits++;
+      sourceMap[src].visits++;
+      contentMap[cont].visits++;
+
+      if (s.checkout_initiated || ['checkout', 'thank-you', 'purchased'].includes(s.current_step)) {
+        campaignMap[camp].checkouts++;
+        sourceMap[src].checkouts++;
+        contentMap[cont].checkouts++;
+      }
+
+      if (s.purchased) {
+        campaignMap[camp].purchases++;
+        sourceMap[src].purchases++;
+        contentMap[cont].purchases++;
+        campaignMap[camp].revenue += s.revenue || 0;
+        sourceMap[src].revenue += s.revenue || 0;
+        contentMap[cont].revenue += s.revenue || 0;
+      }
+    });
+
+    return {
+      campaigns: Object.entries(campaignMap).map(([name, data]) => ({ name, ...data })),
+      sources: Object.entries(sourceMap).map(([name, data]) => ({ name, ...data })),
+      contents: Object.entries(contentMap).map(([name, data]) => ({ name, ...data }))
+    };
+  };
+
+  const utmMetrics = getUtmMetrics();
 
   if (!isAuthenticated) {
     return (
@@ -510,50 +515,43 @@ export default function AdminDashboard() {
     );
   }
 
-  // leads filtrados
-  const leadSessions = sessions.filter(s => 
-    s.whatsapp && (profileFilter === 'all' || s.profile === profileFilter)
-  );
-
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 flex flex-col font-sans">
       
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 py-4 px-6 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      {/* Header Centralizado */}
+      <header className="bg-white border-b border-gray-200 py-5 px-6 sticky top-0 z-40 shadow-sm">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-6 h-6 text-[#2E7D32]" />
-            <h1 className="text-xl font-black tracking-tight text-gray-900">Painel de Conversão</h1>
-            <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded font-extrabold uppercase">Multi-Funil</span>
+            <div className="text-center md:text-left">
+              <h1 className="text-lg font-black tracking-tight text-gray-900 leading-tight">Painel de Analíticos</h1>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">LactoClean • Métricas de Campanhas & Conversão</p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Seletor de Período */}
-            <div className="bg-gray-100 p-1 rounded-lg flex items-center gap-1">
-              {(['today', '7days', '30days', 'custom'] as const).map(type => (
+          <div className="flex flex-wrap justify-center items-center gap-2">
+            {/* Seletor de Data */}
+            <div className="bg-gray-100 p-1 rounded-lg flex items-center gap-0.5 border border-gray-200/50">
+              {(['today', '7days', '30days'] as const).map(type => (
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
-                  className={`px-3 py-1.5 rounded-md font-bold text-xs capitalize transition ${
-                    filterType === type ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-800'
+                  className={`px-3 py-1 rounded-md font-bold text-[11px] capitalize transition ${
+                    filterType === type ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-800'
                   }`}
                 >
-                  {type === 'today' ? 'Hoje' : type === '7days' ? '7 dias' : type === '30days' ? '30 dias' : 'Personalizado'}
+                  {type === 'today' ? 'Hoje' : type === '7days' ? '7D' : '30D'}
                 </button>
               ))}
             </div>
 
-            {/* Ações */}
-            <button onClick={exportToCSV} disabled={sessions.length === 0} className={`p-2 rounded-lg border font-bold text-xs flex items-center gap-1.5 transition ${
-              sessions.length > 0 ? 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200' : 'bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed'
-            }`}>
+            <button onClick={exportToCSV} disabled={sessions.length === 0} className="p-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-lg font-bold text-xs flex items-center gap-1.5 transition">
               <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Exportar</span>
             </button>
 
             <button onClick={seedDemoData} className="p-2 bg-[#2E7D32]/10 text-[#2E7D32] hover:bg-[#2E7D32]/20 rounded-lg font-bold text-xs flex items-center gap-1.5 transition">
               <Database className="w-4 h-4" />
-              <span>Simular Vendas</span>
+              <span className="hidden sm:inline">Simular Dados</span>
             </button>
             
             <button onClick={clearLocalData} className="p-2 hover:bg-red-50 text-red-500 rounded-lg border border-transparent hover:border-red-200 transition">
@@ -563,21 +561,9 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      {/* Inputs Período Personalizado */}
-      {filterType === 'custom' && (
-        <div className="bg-white border-b border-gray-200 px-6 py-3">
-          <div className="max-w-6xl mx-auto flex items-center gap-3">
-            <Calendar className="w-4 h-4 text-gray-500" />
-            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-gray-50 border border-gray-200 rounded px-2.5 py-1 text-xs font-semibold text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#2E7D32]" />
-            <span className="text-gray-400 text-xs">até</span>
-            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-gray-50 border border-gray-200 rounded px-2.5 py-1 text-xs font-semibold text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#2E7D32]" />
-          </div>
-        </div>
-      )}
-
-      {/* Abas de Filtro de Perfil (Sim/Não) */}
-      <div className="bg-white border-b border-gray-200 px-6">
-        <div className="max-w-6xl mx-auto flex border-b border-transparent">
+      {/* Seletor de Perfil do Funil (Filtro Superior Centralizado) */}
+      <div className="bg-white border-b border-gray-200 py-2">
+        <div className="max-w-5xl mx-auto flex justify-center gap-2 px-6">
           {[
             { id: 'all', label: 'Todos os Perfis' },
             { id: 'confirmed', label: 'Confirmados (/s)' },
@@ -586,8 +572,32 @@ export default function AdminDashboard() {
             <button
               key={tab.id}
               onClick={() => setProfileFilter(tab.id as any)}
-              className={`py-3.5 px-5 font-bold text-xs border-b-2 transition -mb-px ${
+              className={`px-4 py-2 font-bold text-xs rounded-lg transition-all border ${
                 profileFilter === tab.id 
+                  ? 'bg-gray-900 text-white border-gray-900' 
+                  : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Navegação por Abas Organizadoras (Centralizadas) */}
+      <div className="bg-white border-b border-gray-200 sticky top-[72px] z-30">
+        <div className="max-w-5xl mx-auto flex justify-center border-b border-transparent px-4">
+          {[
+            { id: 'overview', label: 'Visão Geral' },
+            { id: 'funnel', label: 'Funil Detalhado' },
+            { id: 'utm', label: 'Parâmetros Facebook / UTM' },
+            { id: 'times', label: 'Tempos de Resposta' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`py-3.5 px-4 font-bold text-xs border-b-2 transition -mb-px shrink-0 ${
+                activeTab === tab.id 
                   ? 'border-[#2E7D32] text-[#2E7D32]' 
                   : 'border-transparent text-gray-400 hover:text-gray-600'
               }`}
@@ -598,83 +608,97 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Conteúdo Principal */}
-      <main className="max-w-6xl w-full mx-auto p-6 space-y-6 flex-1">
+      {/* Conteúdo Principal Centralizado */}
+      <main className="max-w-5xl w-full mx-auto p-6 space-y-6 flex-1 flex flex-col justify-start">
         {loading ? (
           <div className="h-64 flex items-center justify-center">
-            <div className="w-10 h-10 border-4 border-gray-200 border-t-[#2E7D32] rounded-full animate-spin" />
+            <div className="w-8 h-8 border-3 border-gray-200 border-t-[#2E7D32] rounded-full animate-spin" />
           </div>
         ) : (
           <>
-            {/* Metricas principais */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Visitantes</span>
-                  <p className="text-2xl font-black text-gray-900">{metrics.visitas}</p>
-                </div>
-                <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                  <Users className="w-5 h-5" />
-                </div>
-              </div>
+            {/* ABAS DO PAINEL */}
 
-              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Conclusão Quiz</span>
-                  <p className="text-2xl font-black text-gray-900">{metrics.completionRate.toFixed(1)}%</p>
-                  <p className="text-[10px] text-gray-400 font-semibold">{metrics.resultado} na oferta</p>
-                </div>
-                <div className="w-10 h-10 bg-[#E8F5E9] rounded-full flex items-center justify-center text-[#2E7D32]">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-              </div>
+            {/* ABA 1: VISÃO GERAL */}
+            {activeTab === 'overview' && (
+              <div className="space-y-6 animate-fadeIn">
+                
+                {/* Métricas Centradas */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white p-5 rounded-2xl shadow-xs border border-gray-150 flex flex-col justify-between">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Visitantes</span>
+                    <h2 className="text-3xl font-black text-gray-900 mt-1">{metrics.visitas}</h2>
+                    <p className="text-[9px] text-gray-400 font-semibold mt-2 flex items-center gap-1"><Users className="w-3 h-3 text-gray-400" /> Tráfego total</p>
+                  </div>
 
-              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Compras</span>
-                  <p className="text-2xl font-black text-gray-900">{metrics.compra}</p>
-                  <p className="text-[10px] text-gray-400 font-semibold">Conversão: {(metrics.visitas > 0 ? (metrics.compra / metrics.visitas) * 100 : 0).toFixed(1)}%</p>
-                </div>
-                <div className="w-10 h-10 bg-[#E8F5E9] rounded-full flex items-center justify-center text-[#2E7D32]">
-                  <ShoppingBag className="w-5 h-5" />
-                </div>
-              </div>
+                  <div className="bg-white p-5 rounded-2xl shadow-xs border border-gray-150 flex flex-col justify-between">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Taxa Conclusão</span>
+                    <h2 className="text-3xl font-black text-gray-900 mt-1">{metrics.completionRate.toFixed(1)}%</h2>
+                    <p className="text-[9px] text-gray-400 font-semibold mt-2">{metrics.resultado} chegaram na LP</p>
+                  </div>
 
-              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Faturamento</span>
-                  <p className="text-2xl font-black text-gray-900">R$ {metrics.revenue.toFixed(2)}</p>
-                  <p className="text-[10px] text-gray-400 font-semibold">Ticket Médio: R$ {metrics.compra > 0 ? (metrics.revenue / metrics.compra).toFixed(2) : '0,00'}</p>
-                </div>
-                <div className="w-10 h-10 bg-[#E8F5E9] rounded-full flex items-center justify-center text-[#2E7D32]">
-                  <DollarSign className="w-5 h-5" />
-                </div>
-              </div>
-            </div>
+                  <div className="bg-white p-5 rounded-2xl shadow-xs border border-gray-150 flex flex-col justify-between">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Vendas</span>
+                    <h2 className="text-3xl font-black text-gray-900 mt-1">{metrics.compra}</h2>
+                    <p className="text-[9px] text-[#2E7D32] font-extrabold mt-2">Conv: {(metrics.visitas > 0 ? (metrics.compra / metrics.visitas) * 100 : 0).toFixed(1)}%</p>
+                  </div>
 
-            {/* Maior Abandono */}
-            {metrics.biggestDropRate > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
-                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-bold text-amber-800 text-sm">Maior ponto de abandono</h3>
-                  <p className="text-xs text-amber-700 leading-relaxed font-semibold">
-                    Cerca de <span className="font-extrabold text-amber-950">{metrics.biggestDropRate.toFixed(0)}%</span> abandonam na etapa <span className="underline">{metrics.biggestDropStep}</span>.
-                  </p>
+                  <div className="bg-white p-5 rounded-2xl shadow-xs border border-gray-150 flex flex-col justify-between">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Receita</span>
+                    <h2 className="text-3xl font-black text-gray-900 mt-1">R$ {metrics.revenue.toFixed(2)}</h2>
+                    <p className="text-[9px] text-gray-400 font-semibold mt-2">Ticket Médio: R$ {metrics.compra > 0 ? (metrics.revenue / metrics.compra).toFixed(2) : '0,00'}</p>
+                  </div>
                 </div>
+
+                {/* Bloco Alerta Maior Abandono */}
+                {metrics.biggestDropRate > 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-bold text-amber-800 text-sm">Onde os usuários mais saem:</h3>
+                      <p className="text-xs text-amber-700 leading-relaxed font-semibold">
+                        Cerca de <span className="font-extrabold text-amber-950">{metrics.biggestDropRate.toFixed(0)}%</span> abandonam na etapa <span className="underline">{metrics.biggestDropStep}</span>.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tabela Resumida de Conversão */}
+                <div className="bg-white rounded-2xl shadow-xs border border-gray-150 overflow-hidden">
+                  <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+                    <h3 className="font-black text-gray-900 text-sm">Conversão por Etapas Principais</h3>
+                  </div>
+                  <div className="p-5 space-y-4">
+                    {[
+                      { label: 'Acessaram a Página Inicial', count: metrics.visitas, pct: 100 },
+                      { label: 'Iniciaram o Quiz', count: metrics.q1, pct: metrics.visitas > 0 ? (metrics.q1 / metrics.visitas) * 100 : 0 },
+                      { label: 'Visualizaram a LP de Vendas', count: metrics.resultado, pct: metrics.visitas > 0 ? (metrics.resultado / metrics.visitas) * 100 : 0 },
+                      { label: 'Abriram o Checkout', count: metrics.checkout, pct: metrics.visitas > 0 ? (metrics.checkout / metrics.visitas) * 100 : 0 },
+                      { label: 'Finalizaram a Compra', count: metrics.compra, pct: metrics.visitas > 0 ? (metrics.compra / metrics.visitas) * 100 : 0 }
+                    ].map((step, idx) => (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex justify-between text-xs font-bold text-gray-700">
+                          <span>{step.label}</span>
+                          <span>{step.count} ({step.pct.toFixed(1)}%)</span>
+                        </div>
+                        <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                          <div className="bg-[#2E7D32] h-full rounded-full transition-all" style={{ width: `${step.pct}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
             )}
 
-            {/* Funil Visual e Mapa de Calor */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
-              {/* Funil */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2 space-y-6">
-                <h3 className="font-black text-gray-900 text-base">Funil de Vendas Visual ({profileFilter === 'all' ? 'Todos os Perfis' : profileFilter === 'confirmed' ? 'Confirmados' : 'Suspeitos'})</h3>
+            {/* ABA 2: FUNIL DETALHADO */}
+            {activeTab === 'funnel' && (
+              <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-150 space-y-6 animate-fadeIn">
+                <h3 className="font-black text-gray-900 text-sm">Funil de Respostas Passo a Passo ({profileFilter === 'all' ? 'Todos os Perfis' : profileFilter === 'confirmed' ? 'Confirmados' : 'Suspeitos'})</h3>
                 
-                <div className="space-y-3.5">
+                <div className="space-y-4">
                   {[
-                    { label: 'Visitas', count: metrics.visitas, prev: 0 },
+                    { label: 'Visitas Totais', count: metrics.visitas, prev: 0 },
                     { label: 'Pergunta 1 (Split)', count: metrics.q1, prev: metrics.visitas },
                     { label: 'Pergunta 2', count: metrics.q2, prev: metrics.q1 },
                     { label: 'Pergunta 3', count: metrics.q3, prev: metrics.q2 },
@@ -682,10 +706,9 @@ export default function AdminDashboard() {
                     { label: 'Pergunta 5', count: metrics.q5, prev: metrics.q4 },
                     { label: 'Pergunta 6', count: metrics.q6, prev: metrics.q5 },
                     { label: 'Pergunta 7', count: metrics.q7, prev: metrics.q6 },
-                    { label: 'Captura Lead', count: metrics.lead, prev: metrics.q7 },
-                    { label: 'Resultado', count: metrics.resultado, prev: metrics.lead },
-                    { label: 'Checkout', count: metrics.checkout, prev: metrics.resultado },
-                    { label: 'Compra', count: metrics.compra, prev: metrics.checkout }
+                    { label: 'Resultado / LP Vendas', count: metrics.resultado, prev: metrics.q7 },
+                    { label: 'Checkout Iniciado', count: metrics.checkout, prev: metrics.resultado },
+                    { label: 'Compra Finalizada', count: metrics.compra, prev: metrics.checkout }
                   ].map((step, idx) => {
                     const widthPct = metrics.visitas > 0 ? (step.count / metrics.visitas) * 100 : 0;
                     const dropRate = step.prev > 0 ? getDropRate(step.prev, step.count) : 0;
@@ -694,7 +717,7 @@ export default function AdminDashboard() {
                       <div key={idx} className="space-y-1">
                         <div className="flex items-center justify-between text-xs font-bold text-gray-700">
                           <span className="flex items-center gap-1.5">
-                            <span className="w-5 h-5 rounded bg-gray-100 text-gray-500 text-[10px] font-extrabold flex items-center justify-center">{idx + 1}</span>
+                            <span className="w-5 h-5 rounded bg-gray-100 text-gray-500 text-[10px] font-black flex items-center justify-center">{idx + 1}</span>
                             {step.label}
                           </span>
                           <div className="space-x-3 text-right">
@@ -703,7 +726,7 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <div className="w-full bg-gray-50 h-7 rounded-lg overflow-hidden border border-gray-100 flex items-center relative">
-                          <div className="bg-[#2E7D32]/10 border-r-2 border-[#2E7D32] h-full transition-all duration-300" style={{ width: `${widthPct}%` }} />
+                          <div className="bg-[#2E7D32]/10 border-r border-[#2E7D32] h-full transition-all" style={{ width: `${widthPct}%` }} />
                           <span className="absolute left-3 text-[10px] font-black text-[#2E7D32]">{widthPct.toFixed(1)}% do total</span>
                         </div>
                       </div>
@@ -711,12 +734,135 @@ export default function AdminDashboard() {
                   })}
                 </div>
               </div>
+            )}
 
-              {/* Mapa de Calor */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
-                <h3 className="font-black text-gray-900 text-base">Tempo Médio de Resposta</h3>
+            {/* ABA 3: PARÂMETROS FACEBOOK / UTM */}
+            {activeTab === 'utm' && (
+              <div className="space-y-6 animate-fadeIn">
                 
-                <div className="space-y-5">
+                {/* 1. Tabela Campanhas do Facebook */}
+                <div className="bg-white rounded-2xl shadow-xs border border-gray-150 overflow-hidden">
+                  <div className="p-5 border-b border-gray-100 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-[#1877F2]" />
+                    <h3 className="font-black text-gray-900 text-sm">Campanhas Ativas do Facebook Ads</h3>
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 text-gray-400 font-bold uppercase tracking-wider border-b border-gray-100">
+                          <th className="py-3 px-5">Campanha (`utm_campaign`)</th>
+                          <th className="py-3 px-5 text-center">Visitas</th>
+                          <th className="py-3 px-5 text-center">Checkout</th>
+                          <th className="py-3 px-5 text-center">Compras</th>
+                          <th className="py-3 px-5 text-center">Taxa Conv.</th>
+                          <th className="py-3 px-5 text-right">Faturamento</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 text-gray-700 font-medium">
+                        {utmMetrics.campaigns.map((camp, idx) => {
+                          const convRate = camp.visits > 0 ? (camp.purchases / camp.visits) * 100 : 0;
+                          return (
+                            <tr key={idx} className="hover:bg-gray-50/50">
+                              <td className="py-3 px-5 font-bold text-gray-950">{camp.name}</td>
+                              <td className="py-3 px-5 text-center">{camp.visits}</td>
+                              <td className="py-3 px-5 text-center">{camp.checkouts}</td>
+                              <td className="py-3 px-5 text-center font-bold text-emerald-700">{camp.purchases}</td>
+                              <td className="py-3 px-5 text-center font-bold">{convRate.toFixed(1)}%</td>
+                              <td className="py-3 px-5 text-right font-black text-gray-950">R$ {camp.revenue.toFixed(2)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* 2. Tabela Fontes de Tráfego */}
+                <div className="bg-white rounded-2xl shadow-xs border border-gray-150 overflow-hidden">
+                  <div className="p-5 border-b border-gray-100 flex items-center gap-2">
+                    <ListFilter className="w-5 h-5 text-[#2E7D32]" />
+                    <h3 className="font-black text-gray-900 text-sm">Origens de Tráfego (`utm_source`)</h3>
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 text-gray-400 font-bold uppercase tracking-wider border-b border-gray-100">
+                          <th className="py-3 px-5">Mídia / Origem</th>
+                          <th className="py-3 px-5 text-center">Visitas</th>
+                          <th className="py-3 px-5 text-center">Checkouts</th>
+                          <th className="py-3 px-5 text-center">Compras</th>
+                          <th className="py-3 px-5 text-center">Conversão</th>
+                          <th className="py-3 px-5 text-right">Faturamento</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 text-gray-700 font-medium">
+                        {utmMetrics.sources.map((src, idx) => {
+                          const convRate = src.visits > 0 ? (src.purchases / src.visits) * 100 : 0;
+                          return (
+                            <tr key={idx} className="hover:bg-gray-50/50">
+                              <td className="py-3 px-5 capitalize font-bold text-gray-950">{src.name}</td>
+                              <td className="py-3 px-5 text-center">{src.visits}</td>
+                              <td className="py-3 px-5 text-center">{src.checkouts}</td>
+                              <td className="py-3 px-5 text-center font-bold text-emerald-700">{src.purchases}</td>
+                              <td className="py-3 px-5 text-center font-bold">{convRate.toFixed(1)}%</td>
+                              <td className="py-3 px-5 text-right font-black text-gray-950">R$ {src.revenue.toFixed(2)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* 3. Tabela Criativos de Anúncio */}
+                <div className="bg-white rounded-2xl shadow-xs border border-gray-150 overflow-hidden">
+                  <div className="p-5 border-b border-gray-100 flex items-center gap-2">
+                    <Grid className="w-5 h-5 text-[#2E7D32]" />
+                    <h3 className="font-black text-gray-900 text-sm">Criativos de Anúncio (`utm_content`)</h3>
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 text-gray-400 font-bold uppercase tracking-wider border-b border-gray-100">
+                          <th className="py-3 px-5">Criativo / Criativos do Anúncio</th>
+                          <th className="py-3 px-5 text-center">Cliques</th>
+                          <th className="py-3 px-5 text-center">Checkouts</th>
+                          <th className="py-3 px-5 text-center">Compras</th>
+                          <th className="py-3 px-5 text-center">Conversão</th>
+                          <th className="py-3 px-5 text-right">Faturamento</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 text-gray-700 font-medium">
+                        {utmMetrics.contents.map((cont, idx) => {
+                          const convRate = cont.visits > 0 ? (cont.purchases / cont.visits) * 100 : 0;
+                          return (
+                            <tr key={idx} className="hover:bg-gray-50/50">
+                              <td className="py-3 px-5 font-bold text-gray-950">{cont.name}</td>
+                              <td className="py-3 px-5 text-center">{cont.visits}</td>
+                              <td className="py-3 px-5 text-center">{cont.checkouts}</td>
+                              <td className="py-3 px-5 text-center font-bold text-emerald-700">{cont.purchases}</td>
+                              <td className="py-3 px-5 text-center font-bold">{convRate.toFixed(1)}%</td>
+                              <td className="py-3 px-5 text-right font-black text-gray-950">R$ {cont.revenue.toFixed(2)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* ABA 4: TEMPOS DE RESPOSTA */}
+            {activeTab === 'times' && (
+              <div className="bg-white p-6 rounded-2xl shadow-xs border border-gray-150 space-y-6 animate-fadeIn">
+                <h3 className="font-black text-gray-900 text-sm">Tempo Médio de Permanência por Pergunta</h3>
+                
+                <div className="space-y-4">
                   {[
                     { label: 'Pergunta 1 (Split)', time: metrics.avgTimes.q1 },
                     { label: 'Pergunta 2', time: metrics.avgTimes.q2 },
@@ -733,81 +879,20 @@ export default function AdminDashboard() {
                     const timeBarWidth = Math.min((step.time / 15) * 100, 100);
 
                     return (
-                      <div key={idx} className="space-y-1.5">
+                      <div key={idx} className="space-y-1">
                         <div className="flex justify-between text-xs font-bold text-gray-700">
                           <span>{step.label}</span>
                           <span className={`px-2 py-0.5 rounded border text-[10px] font-black ${colorClass}`}>{step.time.toFixed(1)}s</span>
                         </div>
-                        <div className="w-full bg-gray-50 h-2.5 rounded-full overflow-hidden border border-gray-100 flex items-center">
+                        <div className="w-full bg-gray-50 h-2 rounded-full overflow-hidden border border-gray-100 flex items-center">
                           <div className={`${barColor} h-full rounded-full transition-all`} style={{ width: `${timeBarWidth}%` }} />
                         </div>
                       </div>
                     );
                   })}
                 </div>
-                
-                <div className="bg-gray-50 rounded-xl p-3.5 border border-gray-100 flex items-start gap-2 text-xs text-gray-500">
-                  <AlertCircle className="w-4 h-4 text-[#2E7D32] shrink-0 mt-0.5" />
-                  <p className="leading-normal font-semibold">Os tempos de resposta acima mostram onde os usuários gastaram mais tempo refletindo ou selecionando opções.</p>
-                </div>
               </div>
-            </div>
-
-            {/* Tabela de Leads */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="font-black text-gray-900 text-base">Leads (WhatsApp)</h3>
-                <div className="bg-[#E8F5E9] text-[#2E7D32] px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>{leadSessions.length} Leads</span>
-                </div>
-              </div>
-
-              {leadSessions.length === 0 ? (
-                <div className="p-12 text-center text-xs text-gray-400 font-semibold">Nenhum WhatsApp capturado neste período.</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-gray-50 text-gray-400 font-bold uppercase tracking-wider border-b border-gray-100">
-                        <th className="py-4 px-6">Data</th>
-                        <th className="py-4 px-6">Perfil</th>
-                        <th className="py-4 px-6">WhatsApp</th>
-                        <th className="py-4 px-6">Pontos</th>
-                        <th className="py-4 px-6">Status</th>
-                        <th className="py-4 px-6">Receita</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 text-gray-700">
-                      {leadSessions.map((session, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50/50 font-medium">
-                          <td className="py-4 px-6 whitespace-nowrap">{new Date(session.created_at).toLocaleString('pt-BR')}</td>
-                          <td className="py-4 px-6">
-                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
-                              session.profile === 'confirmed' ? 'bg-[#E8F5E9] text-[#2E7D32]' : 'bg-blue-50 text-blue-700'
-                            }`}>
-                              {session.profile === 'confirmed' ? 'Confirmado (/s)' : 'Suspeito (/n)'}
-                            </span>
-                          </td>
-                          <td className="py-4 px-6 font-bold text-gray-900">{session.whatsapp}</td>
-                          <td className="py-4 px-6 font-bold">{session.score} pts</td>
-                          <td className="py-4 px-6">
-                            {session.purchased ? (
-                              <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded border border-emerald-100 text-[10px] font-black uppercase">Comprou</span>
-                            ) : session.checkout_initiated ? (
-                              <span className="bg-amber-50 text-amber-700 px-2.5 py-1 rounded border border-amber-100 text-[10px] font-black uppercase">Abandono Checkout</span>
-                            ) : (
-                              <span className="bg-gray-50 text-gray-400 px-2.5 py-1 rounded border border-gray-100 text-[10px] font-black uppercase">Abandono Quiz</span>
-                            )}
-                          </td>
-                          <td className="py-4 px-6 font-extrabold text-gray-900">R$ {session.revenue.toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            )}
           </>
         )}
       </main>

@@ -16,6 +16,13 @@ export interface QuizSession {
   upsell1_purchased: boolean;
   upsell2_purchased: boolean;
   revenue: number;
+  // Facebook / UTM tracking
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
+  fbclid?: string;
 }
 
 // Chave para salvar no localStorage
@@ -36,10 +43,8 @@ function generateUUID(): string {
 // Disparar eventos do Meta Pixel de forma segura
 export function trackPixel(eventName: string, data?: Record<string, any>) {
   if (typeof window !== 'undefined') {
-    // Exibir no console para depuração fácil
     console.log(`[Meta Pixel Event] ${eventName}`, data || '');
     
-    // Chamar fbq real se existir
     const fbq = (window as any).fbq;
     if (typeof fbq === 'function') {
       try {
@@ -80,14 +85,12 @@ export function getOrCreateSession(initialProfile?: 'confirmed' | 'suspect'): Qu
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Se um perfil inicial foi passado e não está no cache local, atualiza
       if (initialProfile && parsed.profile !== initialProfile) {
         parsed.profile = initialProfile;
         parsed.updated_at = new Date().toISOString();
         saveSessionLocally(parsed);
         syncSessionWithDatabase(parsed);
       }
-      // Garantir campos padrão se carregando dados antigos
       return {
         checkout_initiated: false,
         order_bump_selected: false,
@@ -100,6 +103,19 @@ export function getOrCreateSession(initialProfile?: 'confirmed' | 'suspect'): Qu
     }
   } catch (e) {
     console.error('Erro ao ler sessão do localStorage:', e);
+  }
+
+  // Capturar parâmetros UTM / Facebook da URL
+  let utms: Record<string, string> = {};
+  try {
+    const searchParams = new URLSearchParams(window.location.search);
+    const keys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid'];
+    keys.forEach(k => {
+      const val = searchParams.get(k);
+      if (val) utms[k] = val;
+    });
+  } catch (urlErr) {
+    console.error('Erro ao ler parâmetros da URL:', urlErr);
   }
 
   // Se não existir, criar uma nova
@@ -118,12 +134,17 @@ export function getOrCreateSession(initialProfile?: 'confirmed' | 'suspect'): Qu
     upsell1_purchased: false,
     upsell2_purchased: false,
     revenue: 0,
+    utm_source: utms.utm_source,
+    utm_medium: utms.utm_medium,
+    utm_campaign: utms.utm_campaign,
+    utm_content: utms.utm_content,
+    utm_term: utms.utm_term,
+    fbclid: utms.fbclid,
   };
 
   saveSessionLocally(newSession);
   syncSessionWithDatabase(newSession);
   
-  // Disparar PageView inicial na criação da sessão
   trackPixel('PageView');
   
   return newSession;
@@ -158,7 +179,6 @@ export async function syncSessionWithDatabase(session: QuizSession) {
   try {
     const { error } = await supabase.from('quiz_sessions').insert(session);
     if (error) {
-      // Se der erro de chave duplicada (porque já inserimos antes), tentamos dar UPDATE
       const { error: updateError } = await supabase
         .from('quiz_sessions')
         .update(session)
@@ -183,57 +203,30 @@ export function trackStepTransition(nextStep: string, answersToMerge?: Record<st
   const now = Date.now();
   const timeSpentInCurrentStep = now - stepStartTime;
   
-  // Registrar tempo gasto na etapa anterior
   const prevStep = session.current_step;
   session.time_spent[prevStep] = (session.time_spent[prevStep] || 0) + timeSpentInCurrentStep;
   
-  // Atualizar etapa
   session.current_step = nextStep;
   session.updated_at = new Date().toISOString();
 
-  // Mesclar respostas se houver
   if (answersToMerge) {
     session.answers = { ...session.answers, ...answersToMerge };
   }
 
-  // Adicionar pontuação se houver delta
   if (calculatedScoreDelta !== undefined) {
     session.score += calculatedScoreDelta;
   }
 
-  // Resetar cronômetro para a nova etapa
   stepStartTime = now;
 
   saveSessionLocally(session);
   syncSessionWithDatabase(session);
 
-  // Mapear disparos de eventos do Meta Pixel com base nas etapas importantes
-  if (nextStep === 'q1') {
+  if (nextStep === 'q1_split' || nextStep === 'q1') {
     trackPixel('ViewContent', { content_name: 'Quiz Sem Lactose - Iniciado' });
-  } else if (nextStep === 'lead') {
-    // Chegou na captura de lead
-    trackPixel('ViewContent', { content_name: 'Quiz Sem Lactose - Respostas Prontas' });
   } else if (nextStep === 'result' || nextStep === 'offer') {
-    // Visualizou o resultado/oferta
     trackPixel('ViewContent', { content_name: 'Quiz Sem Lactose - Oferta Exibida', value: 27.90, currency: 'BRL' });
   }
-
-  return session;
-}
-
-// Capturar lead de WhatsApp
-export function trackLeadWhatsApp(whatsapp: string) {
-  const session = getOrCreateSession();
-  if (!session.id) return session;
-
-  session.whatsapp = whatsapp;
-  session.current_step = 'processing'; // transição automática
-  session.updated_at = new Date().toISOString();
-
-  saveSessionLocally(session);
-  syncSessionWithDatabase(session);
-
-  trackPixel('Lead', { content_category: 'Quiz Lead', content_name: 'WhatsApp Capture' });
 
   return session;
 }

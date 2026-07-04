@@ -9,334 +9,391 @@ import {
   ShieldCheck, 
   Lock, 
   ChevronRight, 
-  Activity, 
-  Mail,
+  TrendingDown, 
+  Clock,
   BookOpen,
   Apple,
   Utensils,
   MapPin,
   ListTodo,
   Shield,
-  HelpCircle
+  HelpCircle,
+  Mail,
+  ArrowRight,
+  TrendingUp,
+  AlertTriangle,
+  Heart
 } from 'lucide-react';
 import Image from 'next/image';
 
 export default function SuspectLP() {
   const router = useRouter();
-  const [frequency, setFrequency] = useState<string>('Quase todos os dias');
-  const [foodTrigger, setFoodTrigger] = useState<string>('Leite, queijos e pizzas');
+  const [difficulty, setDifficulty] = useState<string>('Quase todos os dias');
+  const [missedFood, setMissedFood] = useState<string>('Pizza e queijos');
+
+  // Timer regressivo
+  const [minutes, setMinutes] = useState(10);
+  const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
     const session = getOrCreateSession('suspect');
     if (session && session.answers) {
-      if (session.answers.q2_susp) setFrequency(session.answers.q2_susp);
-      if (session.answers.q5_susp) setFoodTrigger(session.answers.q5_susp);
+      if (session.answers.q2_susp) setDifficulty(session.answers.q2_susp);
+      if (session.answers.q5_susp) setMissedFood(session.answers.q5_susp);
     }
-  }, []);
+
+    const timer = setInterval(() => {
+      if (seconds > 0) {
+        setSeconds(prev => prev - 1);
+      } else if (minutes > 0) {
+        setMinutes(prev => prev - 1);
+        setSeconds(59);
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [minutes, seconds]);
 
   const handleCheckout = () => {
     trackInitiateCheckout(false);
     router.push('/checkout');
   };
 
+  const formatTime = (m: number, s: number) => {
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
   return (
-    <div className="flex-1 w-full bg-[#F7F7F7] flex flex-col justify-start">
-      <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl border-x border-gray-100 flex flex-col justify-between">
+    <div className="flex-1 w-full bg-[#FAF6F1] text-[#3A2817] flex flex-col justify-start">
+      <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl border-x border-[#F0E8DC] flex flex-col justify-between">
         
-        {/* Barra de Progresso Concluída */}
-        <div className="sticky top-0 bg-white z-40 border-b border-gray-100 shrink-0">
-          <div className="px-6 py-3 flex items-center justify-between bg-[#E8F5E9]/50">
-            <span className="text-[10px] font-black text-[#2E7D32] uppercase tracking-wider flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[#2E7D32] animate-pulse" />
-              Relatório de Sintomas
-            </span>
-            <span className="text-[10px] font-bold text-gray-500">Código: #LC-SUSP</span>
-          </div>
-          <div className="w-full bg-gray-100 h-1">
-            <div className="bg-[#2E7D32] h-full w-full" />
-          </div>
-          <div className="px-6 py-2 bg-[#2E7D32] text-white text-center text-xs font-bold tracking-wide">
-            ✓ Seu resultado está pronto (100% Analisado)
-          </div>
+        {/* Barra estilo portal de notícia vermelho no topo */}
+        <div className="bg-[#B91C1C] text-white py-2 px-4 text-center font-extrabold text-[9px] uppercase tracking-widest shrink-0">
+          🚨 Plantão de Saúde: Estudo mostra que 70% dos adultos têm má absorção de lactose
         </div>
 
-        {/* Corpo Principal */}
+        {/* Portal Header */}
+        <header className="border-b border-[#F0E8DC] bg-white shrink-0">
+          <div className="px-4 py-1.5 bg-[#FAF6F1]/50 border-b border-[#F0E8DC]/50 flex items-center justify-center gap-4 text-[9px] font-bold text-gray-500 overflow-x-auto whitespace-nowrap">
+            <span className="text-[#2E7D32]">saude.com</span>
+            <span>digestão</span>
+            <span>nutrição</span>
+            <span>receitas</span>
+            <span>estilo de vida</span>
+          </div>
+          <div className="px-6 py-4 flex items-center justify-between">
+            <span className="font-serif font-black text-xl tracking-tight text-[#2D1810]">
+              portal<span className="text-[#2E7D32]">saúde</span>
+            </span>
+            <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#2E7D32]" />
+              <span>Diagnóstico Oficial</span>
+            </div>
+          </div>
+        </header>
+
+        {/* Corpo Principal da LP */}
         <main className="flex-1 p-6 space-y-8 overflow-y-auto">
           
-          {/* BLOCO 1 - RESULTADO PERSONALIZADO (Acima da dobra) */}
-          <section className="space-y-6 pt-2">
-            <div className="bg-[#F7F7F7] border border-gray-200 rounded-2xl p-5 space-y-3.5">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Seus Relatos no Quiz</span>
-              
-              <div className="space-y-3 text-sm text-gray-800 font-semibold leading-relaxed">
-                <div className="flex items-start gap-2.5">
-                  <span className="text-[#2E7D32] mt-0.5">✔</span>
-                  <p>Frequência dos desconfortos:<br />
-                    <span className="text-gray-900 font-black">👉 {frequency}</span>
-                  </p>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="text-[#2E7D32] mt-0.5">✔</span>
-                  <p>Gatilho após consumir:<br />
-                    <span className="text-gray-900 font-black">👉 {foodTrigger}</span>
-                  </p>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <span className="text-[#2E7D32] mt-0.5">✔</span>
-                  <p>Seus sintomas são frequentemente associados à sensibilidade à lactose.</p>
-                </div>
+          {/* Hero de alerta com diagnóstico */}
+          <section className="bg-red-50/70 border border-red-150 rounded-2xl p-5 space-y-4 text-center">
+            <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+              ⚠️ Atenção: Diagnóstico Concluído
+            </span>
+            <h1 className="text-xl font-black text-[#2D1810] leading-tight">
+              SINTOMAS ATIVOS: SUSPEITA DE INFLAMAÇÃO E INTOLERÂNCIA
+            </h1>
+            <p className="text-xs text-gray-600 leading-relaxed font-semibold">
+              Cruzando os dados de seus sintomas com o seu perfil, identificamos indícios claros de má absorção de lactose. Seu maior desconforto ocorre com a frequência de: <br />
+              <span className="text-gray-900 font-extrabold">👉 "{difficulty}"</span> <br />
+              E o principal alimento que aciona a inflamação intestinal é: <br />
+              <span className="text-gray-900 font-extrabold">👉 "{missedFood}"</span>.
+            </p>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 gap-2.5 pt-2">
+              <div className="bg-white p-2.5 rounded-xl border border-red-100 shadow-xs flex flex-col justify-center">
+                <span className="text-red-600 font-black text-xs">ALTO</span>
+                <span className="text-[8px] text-gray-400 font-bold uppercase mt-1">Nível de Risco</span>
               </div>
-            </div>
-
-            {/* Headline e Subheadline */}
-            <div className="space-y-3 text-center">
-              <h1 className="text-2xl font-black text-gray-950 leading-tight tracking-tight">
-                Seus sintomas podem estar relacionados ao consumo de lactose.
-              </h1>
-              <p className="text-xs text-gray-500 leading-relaxed font-semibold">
-                Muitas pessoas passam anos convivendo com gases, inchaço e desconfortos digestivos sem perceber que algumas mudanças na alimentação podem fazer a diferença.
-              </p>
-            </div>
-
-            {/* CTA 1 */}
-            <div className="space-y-3">
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={handleCheckout}
-                className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white py-4 px-6 rounded-2xl font-black text-sm shadow-md transition-all flex items-center justify-center gap-1.5 group"
-              >
-                <span>QUERO COMEÇAR O TESTE DE 30 DIAS</span>
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </motion.button>
-              
-              <div className="flex justify-center gap-4 text-[10px] text-gray-400 font-bold">
-                <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-[#2E7D32]" /> Risco Zero de 7 dias</span>
-                <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> Conexão Criptografada</span>
+              <div className="bg-white p-2.5 rounded-xl border border-red-100 shadow-xs flex flex-col justify-center">
+                <span className="text-gray-900 font-black text-xs">30 dias</span>
+                <span className="text-[8px] text-gray-400 font-bold uppercase mt-1">Para Desinflamar</span>
+              </div>
+              <div className="bg-white p-2.5 rounded-xl border border-red-100 shadow-xs flex flex-col justify-center">
+                <span className="text-gray-900 font-black text-xs">12.457</span>
+                <span className="text-[8px] text-gray-400 font-bold uppercase mt-1">Já Usaram</span>
               </div>
             </div>
           </section>
 
-          {/* BLOCO 2 — AUMENTO DA DOR */}
-          <section className="bg-red-50/50 border border-red-100 rounded-3xl p-6 space-y-4">
-            <h3 className="text-sm font-black text-red-950">Você se identifica com alguma dessas situações?</h3>
-            
+          {/* Seção DOR */}
+          <section className="space-y-4">
+            <h2 className="text-sm font-black text-[#2D1810] uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-red-600" />
+              Você provavelmente está vivendo isso hoje:
+            </h2>
             <div className="space-y-3">
               {[
-                'Barriga estufada após as refeições;',
-                'Gases frequentes e desconfortáveis;',
-                'Mal-estar logo depois de comer pizza, queijo ou leite;',
-                'Sensação incômoda de que nada resolve o problema.'
+                'Acorda com a barriga reta e termina o dia parecendo que está grávida(o) devido aos gases.',
+                'Sente pontadas ou estufamento logo após consumir queijos, molhos ou requeijão.',
+                'Percebe o intestino oscilando constantemente entre diarreia e prisão de ventre.',
+                'Tenta combater os sintomas usando chás ou remédios paliativos que não tratam a raiz.',
+                'Sente cansaço injustificado e dor de cabeça leve que começam após comer laticínios.',
+                'Fica com medo constante sobre qual refeição vai desencadear dores intestinais.'
               ].map((item, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 text-xs text-red-900 font-semibold">
+                <div key={idx} className="flex items-start gap-2.5 text-xs text-[#3A2817] font-semibold leading-relaxed">
                   <Check className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                   <span>{item}</span>
                 </div>
               ))}
             </div>
-            
-            <p className="text-xs text-red-950 font-bold border-t border-red-200/50 pt-3">
-              Para muitas pessoas, a resposta começa ao observar a relação entre os alimentos consumidos e os sintomas.
-            </p>
           </section>
 
-          {/* BLOCO 3 — APRESENTAÇÃO DA SOLUÇÃO */}
-          <section className="space-y-5">
-            <div className="text-center space-y-1">
-              <span className="text-[10px] font-black text-[#2E7D32] bg-[#E8F5E9] px-3 py-1 rounded-full uppercase tracking-wider">A Solução Inteligente</span>
-              <h2 className="text-xl font-black text-gray-950 pt-2">Método Viver Sem Lactose</h2>
-              <p className="text-xs text-gray-400 font-semibold">Um programa digital criado para ajudar você a:</p>
+          {/* Seção AGRAVAMENTO / STAKES */}
+          <section className="bg-red-50/40 border border-red-100/50 rounded-2xl p-5 space-y-4">
+            <div className="flex items-center gap-1.5 text-xs font-black text-red-700 uppercase tracking-widest">
+              <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+              <span>Consequências Críticas</span>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
+            <h2 className="text-sm font-black text-[#2D1810]">
+              E se você não fizer nada nos próximos 30 dias?
+            </h2>
+            <p className="text-xs text-gray-500 font-medium leading-relaxed">
+              Ignorar os sintomas e manter a ingestão de lactose em um cólon inflamado pode agravar seu quadro para:
+            </p>
+            <div className="space-y-3">
               {[
-                { title: 'Descobrir Substituições', text: 'Opções práticas sem derivados de leite.' },
-                { title: 'Refeições Saborosas', text: 'Cozinhe pratos deliciosos e leves.' },
-                { title: 'Organizar Alimentação', text: 'Plano estruturado para 30 dias.' },
-                { title: 'Segurança Alimentar', text: 'Passo a passo com total certeza.' }
+                'Disbiose Intestinal crônica, onde bactérias patogênicas fermentam a lactose e inflamam a parede intestinal.',
+                'Desenvolvimento de intolerância severa permanente (a ponto de pequenas contaminações gerarem crises severas).',
+                'Erosão das microvilosidades do intestino, gerando má absorção de vitaminas (como Ferro, Cálcio e Vitamina D).',
+                'Irritabilidade do cólon, estendendo a sensibilidade a outros grupos (como glúten, soja ou óleos vegetais).',
+                'Aumento dos gastos com remédios digestivos paliativos de farmácia que perdem o efeito rápido.'
               ].map((item, idx) => (
-                <div key={idx} className="bg-[#F7F7F7] border border-gray-100 rounded-2xl p-4 space-y-1">
-                  <h4 className="text-xs font-black text-gray-900">{item.title}</h4>
-                  <p className="text-[10px] text-gray-500 font-semibold leading-normal">{item.text}</p>
+                <div key={idx} className="flex items-start gap-2.5 text-xs text-red-900 font-semibold leading-relaxed">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0 mt-2" />
+                  <span>{item}</span>
                 </div>
               ))}
             </div>
+            <div className="border-t border-red-150 pt-3 text-center">
+              <p className="text-xs font-extrabold text-[#2D1810]">
+                Fazer o teste de eliminação de 30 dias é a forma mais recomendada para cicatrizar as paredes intestinais.
+              </p>
+            </div>
           </section>
 
-          {/* BLOCO 4 — O QUE VOCÊ RECEBE */}
+          {/* Apresentação do Produto */}
           <section className="space-y-4">
-            <h3 className="text-sm font-black text-gray-950 text-center">O que está incluído no seu plano:</h3>
-            
-            <div className="space-y-3">
-              {/* Produto Principal */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-3.5 shadow-sm">
-                <div className="flex items-center gap-2.5">
-                  <BookOpen className="w-5 h-5 text-[#2E7D32]" />
-                  <h4 className="font-extrabold text-gray-900 text-sm">+200 Receitas Sem Lactose</h4>
+            <div className="text-center space-y-1">
+              <span className="text-[9px] font-black text-[#2E7D32] bg-[#E8F5E9] px-2.5 py-1 rounded-full uppercase tracking-wider">
+                ✨ A solução definitiva para o seu caso
+              </span>
+              <h2 className="text-lg font-black text-gray-900 pt-3">Método Viver Sem Lactose</h2>
+              <p className="text-xs text-gray-500 leading-relaxed font-semibold px-4">
+                Um guia passo a passo completo digital, focado na substituição inteligente e na regeneração da barreira digestiva em 30 dias.
+              </p>
+            </div>
+
+            {/* Imagem do Mockup do Produto */}
+            <div className="my-6 flex justify-center">
+              <div className="relative w-56 h-56 rounded-2xl overflow-hidden shadow-xl border border-gray-150 bg-gray-50">
+                <Image 
+                  src="/mockup.jpg" 
+                  alt="Mockup Guia Viver Sem Lactose" 
+                  fill
+                  sizes="224px"
+                  priority
+                  style={{ objectFit: 'cover' }}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3.5">
+              <div className="bg-[#FAF6F1] border border-[#F0E8DC] rounded-xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-black text-gray-900">
+                  <BookOpen className="w-4 h-4 text-[#2E7D32]" />
+                  <span>Guia Principal (+200 Receitas Sem Lactose)</span>
                 </div>
-                <p className="text-xs text-gray-500 leading-relaxed font-semibold pl-7.5">
-                  Cafés da manhã, almoços, jantares, sobremesas, bolos, lanches e bebidas. Receitas fáceis para você comer bem e sem restrições.
+                <p className="text-xs text-gray-500 font-semibold leading-relaxed pl-6">
+                  Cafés da manhã, almoços, sobremesas e lanches rápidos. Receitas 100% testadas com ingredientes baratos que você já tem em casa.
                 </p>
               </div>
 
-              {/* Bônus 1 */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-3.5 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-[#2E7D32] text-white text-[8px] font-black px-2 py-0.5 rounded-bl uppercase">Grátis</div>
-                <div className="flex items-center gap-2.5">
-                  <Apple className="w-5 h-5 text-[#2E7D32]" />
-                  <h4 className="font-extrabold text-gray-900 text-sm">Bônus #1: Guia de Substituições Inteligentes</h4>
+              <div className="bg-[#FAF6F1] border border-[#F0E8DC] rounded-xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-black text-gray-900">
+                  <Apple className="w-4 h-4 text-[#2E7D32]" />
+                  <span>Bônus #1: Guia de Substituições Inteligentes</span>
                 </div>
-                <p className="text-xs text-gray-500 leading-relaxed font-semibold pl-7.5">
-                  Aprenda o que usar no lugar de leite, queijo, creme de leite e outros ingredientes sem perder a textura cremosa.
+                <p className="text-xs text-gray-500 font-semibold leading-relaxed pl-6">
+                  Aprenda a reproduzir leites vegetais cremosos, queijos derretidos e manteigas idênticas ao original.
                 </p>
               </div>
 
-              {/* Bônus 2 */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-3.5 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-[#2E7D32] text-white text-[8px] font-black px-2 py-0.5 rounded-bl uppercase">Grátis</div>
-                <div className="flex items-center gap-2.5">
-                  <Utensils className="w-5 h-5 text-[#2E7D32]" />
-                  <h4 className="font-extrabold text-gray-900 text-sm">Bônus #2: Cardápio 30 Dias Sem Lactose</h4>
+              <div className="bg-[#FAF6F1] border border-[#F0E8DC] rounded-xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-black text-gray-900">
+                  <Utensils className="w-4 h-4 text-[#2E7D32]" />
+                  <span>Bônus #2: Cardápio 30 Dias Sem Lactose</span>
                 </div>
-                <p className="text-xs text-gray-500 leading-relaxed font-semibold pl-7.5">
-                  Um planejamento alimentar simples para desinflamar e não ter que pensar no que preparar no dia a dia.
+                <p className="text-xs text-gray-500 font-semibold leading-relaxed pl-6">
+                  Rotina alimentar estruturada dia a dia para cicatrizar as paredes intestinais inflamadas.
                 </p>
               </div>
 
-              {/* Bônus 3 */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-3.5 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-[#2E7D32] text-white text-[8px] font-black px-2 py-0.5 rounded-bl uppercase">Grátis</div>
-                <div className="flex items-center gap-2.5">
-                  <MapPin className="w-5 h-5 text-[#2E7D32]" />
-                  <h4 className="font-extrabold text-gray-900 text-sm">Bônus #3: Guia de Comer Fora</h4>
+              <div className="bg-[#FAF6F1] border border-[#F0E8DC] rounded-xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-black text-gray-900">
+                  <MapPin className="w-4 h-4 text-[#2E7D32]" />
+                  <span>Bônus #3: Guia de Comer Fora</span>
                 </div>
-                <p className="text-xs text-gray-500 leading-relaxed font-semibold pl-7.5">
-                  Saiba como fazer escolhas mais seguras em restaurantes e viagens e evitar contaminação cruzada.
-                </p>
-              </div>
-
-              {/* Bônus 4 */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-3.5 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-[#2E7D32] text-white text-[8px] font-black px-2 py-0.5 rounded-bl uppercase">Grátis</div>
-                <div className="flex items-center gap-2.5">
-                  <ListTodo className="w-5 h-5 text-[#2E7D32]" />
-                  <h4 className="font-extrabold text-gray-900 text-sm">Bônus #4: Lista de Compras Prática</h4>
-                </div>
-                <p className="text-xs text-gray-500 leading-relaxed font-semibold pl-7.5">
-                  Tudo organizado por setores de forma limpa para facilitar suas compras semanais de maneira econômica.
+                <p className="text-xs text-gray-500 font-semibold leading-relaxed pl-6">
+                  Checklist prático de segurança para restaurantes, lanchonetes e viagens sem sustos.
                 </p>
               </div>
             </div>
           </section>
 
-          {/* BLOCO 5 — GRÁFICO EM CSS */}
-          <div className="bg-gray-50 border border-gray-200 rounded-3xl p-5 space-y-4">
+          {/* Gráfico Comparativo em CSS */}
+          <section className="bg-gray-50 border border-gray-200 rounded-3xl p-5 space-y-4">
             <div className="text-center space-y-1">
               <h3 className="font-black text-gray-900 text-sm flex items-center justify-center gap-1">
-                <Activity className="w-4 h-4 text-[#2E7D32]" />
-                Nível de Desconforto Abdominal no Teste de 30 Dias 📉
+                <TrendingDown className="w-4 h-4 text-[#2E7D32]" />
+                Comparativo de Custos Mensais 💰
               </h3>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Desinflamação e alívio esperado ao longo das semanas</p>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Por que cozinhar em casa com o Guia compensa?</p>
             </div>
 
-            <div className="space-y-3.5 pt-2 font-bold">
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-gray-700">
-                  <span>Semana 1: Limpeza Inicial</span>
-                  <span className="text-red-500">90% de Desconforto</span>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs font-bold text-gray-700">
+                  <span>Comer fora / Produtos Especiais</span>
+                  <span>R$ 380,00/mês</span>
                 </div>
-                <div className="w-full bg-gray-200 h-4 rounded-full overflow-hidden">
+                <div className="w-full bg-gray-200 h-4 rounded-full overflow-hidden flex items-center">
                   <div className="bg-red-500 h-full w-[90%] transition-all" />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-gray-700">
-                  <span>Semana 2: Intestino Desinflamando</span>
-                  <span className="text-amber-500">60% de Desconforto</span>
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs font-bold text-gray-700">
+                  <span>Enzimas Lactase em Farmácia</span>
+                  <span>R$ 160,00/mês</span>
                 </div>
-                <div className="w-full bg-gray-200 h-4 rounded-full overflow-hidden">
-                  <div className="bg-amber-500 h-full w-[60%] transition-all" />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-gray-700">
-                  <span>Semana 3: Retorno do Bem-Estar</span>
-                  <span className="text-yellow-600">25% de Desconforto</span>
-                </div>
-                <div className="w-full bg-gray-200 h-4 rounded-full overflow-hidden">
-                  <div className="bg-yellow-500 h-full w-[25%] transition-all" />
+                <div className="w-full bg-gray-200 h-4 rounded-full overflow-hidden flex items-center">
+                  <div className="bg-amber-500 h-full w-[55%] transition-all" />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-gray-700">
-                  <span>Semana 4: Digestão Leve e Livre</span>
-                  <span className="text-[#2E7D32]">5% de Desconforto!</span>
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs font-bold text-[#2E7D32]">
+                  <span>Ingredientes do Nosso Guia</span>
+                  <span>R$ 45,00/mês</span>
                 </div>
-                <div className="w-full bg-gray-200 h-4 rounded-full overflow-hidden">
-                  <div className="bg-[#2E7D32] h-full w-[5%] transition-all" />
+                <div className="w-full bg-[#E8F5E9] h-4 rounded-full overflow-hidden flex items-center border border-[#2E7D32]/20">
+                  <div className="bg-[#2E7D32] h-full w-[15%] transition-all" />
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* MOCKUP DO PROGRAMA */}
-          <div className="relative w-full aspect-square rounded-3xl overflow-hidden shadow-md border border-gray-100 bg-gray-50">
-            <Image 
-              src="/mockup.jpg" 
-              alt="Método Viver Sem Lactose" 
-              fill
-              className="object-cover"
-              sizes="(max-w-md) 100vw, 400px"
-              priority
-            />
-          </div>
-
-          {/* DEPOIMENTOS */}
+          {/* Depoimentos reais */}
           <section className="space-y-4">
-            <h3 className="text-sm font-black text-gray-950 text-center">Depoimentos de quem já mudou de rotina:</h3>
+            <h2 className="text-sm font-black text-[#2D1810] text-center uppercase tracking-wider">
+              Veja quem já está vivendo sem lactose:
+            </h2>
             
-            <div className="space-y-3">
+            <div className="space-y-4">
               {[
-                { name: 'Juliana M., 29 anos', image: '/juliana.jpg', text: 'Eu já tinha desistido de comer pizza e doces. Com as receitas do guia, hoje faço substituições incríveis e não sinto nenhuma dor abdominal.' },
-                { name: 'Ricardo S., 43 anos', image: '/ricardo.jpg', text: 'Minha maior surpresa foi economizar no mercado. Parar de comprar as coisas zero lactose industriais e começar a cozinhar certo cortou meus gastos pela metade.' },
-                { name: 'Clarissa F., 36 anos', image: '/clarissa.jpg', text: 'O cardápio de 30 dias salvou minha rotina. As receitas são rápidas e muito saborosas, não parece em nada comida restritiva.' }
-              ].map((dep, idx) => (
-                <div key={idx} className="bg-gray-50 border border-gray-100 p-4.5 rounded-2xl space-y-3">
-                  <p className="text-xs text-gray-600 font-semibold leading-relaxed">"{dep.text}"</p>
-                  <div className="flex items-center gap-3 border-t border-gray-200/50 pt-2.5">
-                    <div className="relative w-8 h-8 rounded-full overflow-hidden shrink-0 border border-gray-200 bg-gray-100">
-                      <Image
-                        src={dep.image}
-                        alt={dep.name}
-                        fill
-                        className="object-cover"
-                        sizes="32px"
-                      />
+                {
+                  name: 'Juliana Mendes, 29',
+                  img: '/juliana.jpg',
+                  text: 'Em 2 semanas seguindo as receitas e o cardápio de desinflamação, minha barriga desinchou completamente. Voltei a ter prazer em comer sem medo de passar mal.'
+                },
+                {
+                  name: 'Ricardo Santos, 43',
+                  img: '/ricardo.jpg',
+                  text: 'O guia de substituições mudou minha rotina. O queijo vegetal caseiro fica idêntico ao tradicional e é muito barato. Recomendo para todos.'
+                },
+                {
+                  name: 'Clarissa Faria, 36',
+                  img: '/clarissa.jpg',
+                  text: 'Achei que comer saudável sem lactose custaria uma fortuna, mas o guia ensina a economizar muito no mercado. Minha digestão hoje é 100% leve.'
+                }
+              ].map((item, idx) => (
+                <div key={idx} className="bg-white border border-[#F0E8DC] p-4 rounded-2xl shadow-xs space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-100 shrink-0">
+                      <Image src={item.img} alt={item.name} fill sizes="40px" style={{ objectFit: 'cover' }} />
                     </div>
                     <div>
-                      <p className="text-[11px] font-black text-gray-900 leading-none">{dep.name}</p>
-                      <p className="text-[9px] text-[#2E7D32] font-bold mt-1">Aluno verificado ✓</p>
+                      <h4 className="text-xs font-bold text-gray-900">{item.name}</h4>
+                      <span className="text-[9px] text-[#2E7D32] font-black uppercase tracking-wider">Aluno Verificado ✓</span>
                     </div>
                   </div>
+                  <p className="text-xs text-gray-600 leading-relaxed font-semibold italic">
+                    "{item.text}"
+                  </p>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* ENTREGA */}
-          <section className="bg-gray-50 border border-gray-100 rounded-3xl p-5 space-y-3">
-            <h3 className="text-sm font-black text-gray-900 flex items-center gap-1.5">
-              <Mail className="w-4 h-4 text-[#2E7D32]" />
-              Como funciona o envio?
-            </h3>
+          {/* Seção VALUE STACK */}
+          <section className="bg-[#2E7D32]/5 border border-[#2E7D32]/25 rounded-2xl p-5 space-y-4">
+            <h2 className="text-xs font-black text-gray-900 uppercase tracking-widest text-center border-b border-[#2E7D32]/10 pb-2">
+              Tudo o que você leva ao entrar hoje:
+            </h2>
             
-            <ul className="space-y-2 text-xs text-gray-700 font-semibold leading-relaxed">
-              <li>📧 **Acesso enviado por e-mail:** Nada de PDFs pesados que bloqueiam seu celular. O acesso chega em até 60 segundos após a confirmação.</li>
-              <li>📱 **Compatibilidade total:** Funciona perfeitamente no celular, computador e tablet. Leia de qualquer lugar.</li>
-              <li>♾️ **Acesso vitalício:** O material é seu para sempre. Você pode ver a hora que quiser, quando quiser, sem prazos de validade.</li>
-            </ul>
+            <div className="space-y-3 text-xs font-semibold text-gray-700">
+              <div className="flex justify-between items-center">
+                <span>Guia Principal (+200 Receitas):</span>
+                <span className="text-red-500 font-bold line-through">R$ 97,00</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Bônus #1 (Guia de Substituições):</span>
+                <span className="text-red-500 font-bold line-through">R$ 47,00</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Bônus #2 (Cardápio 30 Dias):</span>
+                <span className="text-red-500 font-bold line-through">R$ 67,00</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Bônus #3 (Guia de Comer Fora):</span>
+                <span className="text-red-500 font-bold line-through">R$ 37,00</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Bônus #4 (Lista de Compras Prática):</span>
+                <span className="text-red-500 font-bold line-through">R$ 27,00</span>
+              </div>
+              
+              <div className="border-t border-dashed border-[#2E7D32]/25 pt-3.5 space-y-2">
+                <div className="flex justify-between items-center font-bold text-gray-700">
+                  <span>Valor total se comprado separado:</span>
+                  <span className="text-red-600 font-extrabold line-through">R$ 275,00</span>
+                </div>
+                <div className="flex justify-between items-center font-bold text-[#2E7D32]">
+                  <span>Desconto Quiz (90% OFF):</span>
+                  <span>- R$ 247,10</span>
+                </div>
+                <div className="flex justify-between items-baseline pt-2">
+                  <span className="text-xs font-black text-gray-900">Método Completo hoje:</span>
+                  <div className="text-right">
+                    <span className="text-2xl font-black text-[#2E7D32]">R$ 27,90</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Countdown Regressivo */}
+          <section className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center space-y-2.5">
+            <p className="text-[10px] text-amber-800 font-black uppercase tracking-wider flex items-center justify-center gap-1.5">
+              <Clock className="w-4 h-4 text-amber-700 animate-pulse" />
+              Oferta Especial Reservada Por:
+            </p>
+            <div className="flex justify-center gap-1">
+              <span className="bg-white text-gray-900 font-black text-lg px-3 py-1.5 rounded-lg border border-amber-200 shadow-sm">{formatTime(minutes, seconds).split(':')[0]}</span>
+              <span className="font-black text-lg text-amber-700 self-center">:</span>
+              <span className="bg-white text-gray-900 font-black text-lg px-3 py-1.5 rounded-lg border border-amber-200 shadow-sm">{formatTime(minutes, seconds).split(':')[1]}</span>
+            </div>
           </section>
 
           {/* GARANTIA */}
@@ -370,12 +427,12 @@ export default function SuspectLP() {
             </div>
           </section>
 
-          {/* CTA FINAL */}
+          {/* CTA FINAL COM ANIMAÇÃO */}
           <section className="bg-gray-50 border-t border-gray-200/50 p-5 rounded-3xl text-center space-y-4">
             <div className="space-y-1">
-              <span className="text-[10px] text-gray-400 font-bold uppercase">Teste de 30 Dias</span>
+              <span className="text-[9px] text-[#2E7D32] font-black uppercase tracking-widest">Acesso Imediato</span>
               <h3 className="font-black text-gray-900 text-base">Quero Começar Agora</h3>
-              <p className="text-xs text-gray-500 font-semibold">Descubra se eliminar a lactose por 30 dias pode mudar a forma como você se sente por apenas <span className="text-gray-900 font-black">R$ 27,90</span>.</p>
+              <p className="text-xs text-gray-500 font-semibold">Receber meu acesso imediato por apenas <span className="text-gray-900 font-black">R$ 27,90</span>.</p>
             </div>
 
             <motion.button
@@ -383,20 +440,25 @@ export default function SuspectLP() {
               onClick={handleCheckout}
               className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white py-4 px-6 rounded-2xl font-black text-sm shadow-md transition-all flex items-center justify-center gap-1.5 group animate-pulse"
             >
-              <span>QUERO COMEÇAR O TESTE DE 30 DIAS</span>
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              <span>RECEBER MEU ACESSO AGORA</span>
+              <ChevronRight className="w-4.5 h-4.5 group-hover:translate-x-0.5 transition-transform" />
             </motion.button>
+            
+            <div className="flex justify-center gap-4 text-[10px] text-gray-400 font-bold">
+              <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-[#2E7D32]" /> 7 Dias de Garantia</span>
+              <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> Compra Segura</span>
+            </div>
           </section>
 
         </main>
 
-        {/* Rodapé da LP */}
-        <footer className="py-4 px-6 bg-white border-t border-gray-100 text-center shrink-0">
-          <p className="text-[9px] text-gray-400 font-medium">
-            Termos de Uso | Políticas de Privacidade
+        {/* Rodapé do Portal */}
+        <footer className="py-6 px-6 bg-white border-t border-[#F0E8DC] text-center shrink-0 space-y-2">
+          <p className="text-[9px] text-gray-400 leading-normal font-semibold">
+            Este site representa a análise do Método Viver Sem Lactose e não substitui o diagnóstico médico especializado.
           </p>
-          <p className="text-[9px] text-gray-400 mt-1 font-medium">
-            © 2026 Receitas Sem Lactose. Todos os direitos reservados.
+          <p className="text-[9px] text-gray-400 font-medium">
+            © 2026 Portal Saúde • LactoClean. Todos os direitos reservados.
           </p>
         </footer>
 
