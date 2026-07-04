@@ -29,7 +29,7 @@ interface Question {
   options: Option[];
 }
 
-// Perguntas para quem já tem diagnóstico (Sim - Confirmed)
+// Perguntas para quem já sabe que precisa evitar lactose
 const QUESTIONS_CONFIRMED: Question[] = [
   {
     id: 'q2_conf',
@@ -141,9 +141,9 @@ const QUESTIONS_SUSPECT: Question[] = [
   },
   {
     id: 'q7_susp',
-    title: 'Você sabia que um teste de eliminação de lactose por 30 dias é a forma mais recomendada para confirmar a intolerância e eliminar os gases?',
+    title: 'Você sabia que passar alguns dias sem lactose pode ajudar a observar melhor como seu corpo reage?',
     options: [
-      { text: 'Não sabia, mas faz todo sentido', score: 5 },
+      { text: 'Não sabia, mas faz sentido observar', score: 5 },
       { text: 'Sim, já ouvi falar', score: 3 },
       { text: 'Nunca ouvi falar', score: 2 }
     ]
@@ -489,7 +489,7 @@ export default function QuizWizard({ initialProfile = null }: QuizWizardProps) {
                 <div className="space-y-2 text-center">
                   <span className="text-xs font-bold text-[#2E7D32] uppercase tracking-wider">Passo Inicial 🔍</span>
                   <h2 className="text-xl font-extrabold text-gray-900 leading-tight">
-                    Você já tem confirmado (por médico ou exames) que é intolerante ou alérgico à lactose?
+                    Você já sabe que precisa evitar lactose no dia a dia?
                   </h2>
                 </div>
 
@@ -502,7 +502,7 @@ export default function QuizWizard({ initialProfile = null }: QuizWizardProps) {
                   >
                     <div>
                       <span>Sim, já tenho certeza 👍</span>
-                      <p className="text-xs text-gray-500 font-normal mt-1">Já sei que me faz mal ou tenho diagnóstico clínico.</p>
+                      <p className="text-xs text-gray-500 font-normal mt-1">Já percebi relação clara ou tenho orientação profissional.</p>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#2E7D32]" />
                   </motion.button>
@@ -515,7 +515,7 @@ export default function QuizWizard({ initialProfile = null }: QuizWizardProps) {
                   >
                     <div>
                       <span>Não tenho certeza ainda / Apenas suspeito 🤷‍♂️</span>
-                      <p className="text-xs text-gray-500 font-normal mt-1">Sinto gases, cólicas e inchaço frequentes ao consumir.</p>
+                      <p className="text-xs text-gray-500 font-normal mt-1">Sinto gases, cólicas ou inchaço depois de alguns alimentos.</p>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#2E7D32]" />
                   </motion.button>

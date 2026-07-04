@@ -66,27 +66,27 @@ export default function SuspectLP() {
     <div className="flex-1 w-full bg-[#FAF6F1] text-[#3A2817] flex flex-col justify-start">
       <div className="w-full max-w-md mx-auto min-h-screen bg-white shadow-xl border-x border-[#F0E8DC] flex flex-col justify-between">
         
-        {/* Barra estilo portal de notícia vermelho no topo */}
-        <div className="bg-[#B91C1C] text-white py-2 px-4 text-center font-extrabold text-[9px] uppercase tracking-widest shrink-0">
-          🚨 Plantão de Saúde: Estudo mostra que 70% dos adultos têm má absorção de lactose
+        {/* Barra de contexto */}
+        <div className="bg-[#2E7D32] text-white py-2 px-4 text-center font-extrabold text-[9px] uppercase tracking-widest shrink-0">
+          Receitas e substituições para testar uma rotina sem lactose
         </div>
 
         {/* Portal Header */}
         <header className="border-b border-[#F0E8DC] bg-white shrink-0">
           <div className="px-4 py-1.5 bg-[#FAF6F1]/50 border-b border-[#F0E8DC]/50 flex items-center justify-center gap-4 text-[9px] font-bold text-gray-500 overflow-x-auto whitespace-nowrap">
-            <span className="text-[#2E7D32]">saude.com</span>
-            <span>digestão</span>
+              <span className="text-[#2E7D32]">sem lactose</span>
+              <span>rotina</span>
             <span>nutrição</span>
             <span>receitas</span>
             <span>estilo de vida</span>
           </div>
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="font-serif font-black text-xl tracking-tight text-[#2D1810]">
-              portal<span className="text-[#2E7D32]">saúde</span>
+              receitas<span className="text-[#2E7D32]">sem lactose</span>
             </span>
             <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold">
               <ShieldCheck className="w-3.5 h-3.5 text-[#2E7D32]" />
-              <span>Diagnóstico Oficial</span>
+              <span>Quiz Educativo</span>
             </div>
           </div>
         </header>
@@ -94,34 +94,34 @@ export default function SuspectLP() {
         {/* Corpo Principal da LP */}
         <main className="flex-1 p-6 space-y-8 overflow-y-auto">
           
-          {/* Hero de alerta com diagnóstico */}
-          <section className="bg-red-50/70 border border-red-150 rounded-2xl p-5 space-y-4 text-center">
-            <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-              ⚠️ Atenção: Diagnóstico Concluído
+          {/* Hero com resultado */}
+          <section className="bg-[#E8F5E9]/70 border border-[#2E7D32]/20 rounded-2xl p-5 space-y-4 text-center">
+            <span className="inline-flex items-center gap-1 bg-white text-[#2E7D32] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+              Resultado do seu quiz
             </span>
             <h1 className="text-xl font-black text-[#2D1810] leading-tight">
-              SINTOMAS ATIVOS: SUSPEITA DE INFLAMAÇÃO E INTOLERÂNCIA
+              Vale testar uma rotina sem lactose por alguns dias
             </h1>
             <p className="text-xs text-gray-600 leading-relaxed font-semibold">
-              Cruzando os dados de seus sintomas com o seu perfil, identificamos indícios claros de má absorção de lactose. Seu maior desconforto ocorre com a frequência de: <br />
-              <span className="text-gray-900 font-extrabold">👉 "{difficulty}"</span> <br />
-              E o principal alimento que aciona a inflamação intestinal é: <br />
-              <span className="text-gray-900 font-extrabold">👉 "{missedFood}"</span>.
+              Pelas suas respostas, existe uma relação que vale observar melhor. Seu desconforto aparece com a frequência de: <br />
+              <span className="text-gray-900 font-extrabold">👉 &quot;{difficulty}&quot;</span> <br />
+              E o alimento que mais merece uma versão sem lactose na sua rotina é: <br />
+              <span className="text-gray-900 font-extrabold">👉 &quot;{missedFood}&quot;</span>.
             </p>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-3 gap-2.5 pt-2">
               <div className="bg-white p-2.5 rounded-xl border border-red-100 shadow-xs flex flex-col justify-center">
-                <span className="text-red-600 font-black text-xs">ALTO</span>
-                <span className="text-[8px] text-gray-400 font-bold uppercase mt-1">Nível de Risco</span>
+                <span className="text-[#2E7D32] font-black text-xs">BOM</span>
+                <span className="text-[8px] text-gray-400 font-bold uppercase mt-1">Momento para testar</span>
               </div>
               <div className="bg-white p-2.5 rounded-xl border border-red-100 shadow-xs flex flex-col justify-center">
                 <span className="text-gray-900 font-black text-xs">30 dias</span>
-                <span className="text-[8px] text-gray-400 font-bold uppercase mt-1">Para Desinflamar</span>
+                <span className="text-[8px] text-gray-400 font-bold uppercase mt-1">De cardápios</span>
               </div>
               <div className="bg-white p-2.5 rounded-xl border border-red-100 shadow-xs flex flex-col justify-center">
                 <span className="text-gray-900 font-black text-xs">12.457</span>
-                <span className="text-[8px] text-gray-400 font-bold uppercase mt-1">Já Usaram</span>
+                <span className="text-[8px] text-gray-400 font-bold uppercase mt-1">Pessoas interessadas</span>
               </div>
             </div>
           </section>
@@ -149,25 +149,25 @@ export default function SuspectLP() {
             </div>
           </section>
 
-          {/* Seção AGRAVAMENTO / STAKES */}
-          <section className="bg-red-50/40 border border-red-100/50 rounded-2xl p-5 space-y-4">
+          {/* Seção stakes */}
+          <section className="bg-amber-50/60 border border-amber-100 rounded-2xl p-5 space-y-4">
             <div className="flex items-center gap-1.5 text-xs font-black text-red-700 uppercase tracking-widest">
               <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
-              <span>Consequências Críticas</span>
+              <span>O custo de improvisar</span>
             </div>
             <h2 className="text-sm font-black text-[#2D1810]">
-              E se você não fizer nada nos próximos 30 dias?
+              O que costuma acontecer quando você não tem um plano?
             </h2>
             <p className="text-xs text-gray-500 font-medium leading-relaxed">
-              Ignorar os sintomas e manter a ingestão de lactose em um cólon inflamado pode agravar seu quadro para:
+              Sem receitas e substituições claras, muita gente fica presa entre passar vontade e gastar mais:
             </p>
             <div className="space-y-3">
               {[
-                'Disbiose Intestinal crônica, onde bactérias patogênicas fermentam a lactose e inflamam a parede intestinal.',
-                'Desenvolvimento de intolerância severa permanente (a ponto de pequenas contaminações gerarem crises severas).',
-                'Erosão das microvilosidades do intestino, gerando má absorção de vitaminas (como Ferro, Cálcio e Vitamina D).',
-                'Irritabilidade do cólon, estendendo a sensibilidade a outros grupos (como glúten, soja ou óleos vegetais).',
-                'Aumento dos gastos com remédios digestivos paliativos de farmácia que perdem o efeito rápido.'
+                'Você continua sem saber quais receitas trocar primeiro.',
+                'Produtos prontos sem lactose acabam ficando caros no mercado.',
+                'Receitas comuns dão errado quando você troca leite, creme ou queijo sem orientação.',
+                'Comer fora vira tentativa e erro, principalmente em lanches e sobremesas.',
+                'Sem planejamento, fica mais difícil perceber se a mudança realmente ajuda sua rotina.'
               ].map((item, idx) => (
                 <div key={idx} className="flex items-start gap-2.5 text-xs text-red-900 font-semibold leading-relaxed">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0 mt-2" />
@@ -177,7 +177,7 @@ export default function SuspectLP() {
             </div>
             <div className="border-t border-red-150 pt-3 text-center">
               <p className="text-xs font-extrabold text-[#2D1810]">
-                Fazer o teste de eliminação de 30 dias é a forma mais recomendada para cicatrizar as paredes intestinais.
+                Um plano simples de 30 dias ajuda você a testar novas escolhas com menos confusão.
               </p>
             </div>
           </section>
@@ -190,7 +190,7 @@ export default function SuspectLP() {
               </span>
               <h2 className="text-lg font-black text-gray-900 pt-3">Método Viver Sem Lactose</h2>
               <p className="text-xs text-gray-500 leading-relaxed font-semibold px-4">
-                Um guia passo a passo completo digital, focado na substituição inteligente e na regeneração da barreira digestiva em 30 dias.
+                Um guia digital passo a passo, focado em substituições inteligentes, receitas simples e cardápios prontos para 30 dias.
               </p>
             </div>
 
@@ -235,7 +235,7 @@ export default function SuspectLP() {
                   <span>Bônus #2: Cardápio 30 Dias Sem Lactose</span>
                 </div>
                 <p className="text-xs text-gray-500 font-semibold leading-relaxed pl-6">
-                  Rotina alimentar estruturada dia a dia para cicatrizar as paredes intestinais inflamadas.
+                  Rotina alimentar estruturada dia a dia para facilitar suas escolhas sem leite, queijo, manteiga ou creme de leite tradicionais.
                 </p>
               </div>
 
@@ -305,7 +305,7 @@ export default function SuspectLP() {
                 {
                   name: 'Juliana Mendes, 29',
                   img: '/juliana.jpg',
-                  text: 'Em 2 semanas seguindo as receitas e o cardápio de desinflamação, minha barriga desinchou completamente. Voltei a ter prazer em comer sem medo de passar mal.'
+                  text: 'Em 2 semanas seguindo as receitas e o cardápio, parei de improvisar e voltei a comer com muito mais tranquilidade.'
                 },
                 {
                   name: 'Ricardo Santos, 43',
@@ -329,7 +329,7 @@ export default function SuspectLP() {
                     </div>
                   </div>
                   <p className="text-xs text-gray-600 leading-relaxed font-semibold italic">
-                    "{item.text}"
+                    &quot;{item.text}&quot;
                   </p>
                 </div>
               ))}
@@ -366,17 +366,17 @@ export default function SuspectLP() {
               
               <div className="border-t border-dashed border-[#2E7D32]/25 pt-3.5 space-y-2">
                 <div className="flex justify-between items-center font-bold text-gray-700">
-                  <span>Valor total se comprado separado:</span>
+                  <span>Valor normal do pacote:</span>
                   <span className="text-red-600 font-extrabold line-through">R$ 275,00</span>
                 </div>
                 <div className="flex justify-between items-center font-bold text-[#2E7D32]">
-                  <span>Desconto Quiz (90% OFF):</span>
-                  <span>- R$ 247,10</span>
+                  <span>Oferta WhatsApp:</span>
+                  <span>receba antes de pagar</span>
                 </div>
                 <div className="flex justify-between items-baseline pt-2">
-                  <span className="text-xs font-black text-gray-900">Método Completo hoje:</span>
+                  <span className="text-xs font-black text-gray-900">Pague só se gostar:</span>
                   <div className="text-right">
-                    <span className="text-2xl font-black text-[#2E7D32]">R$ 27,90</span>
+                    <span className="text-2xl font-black text-[#2E7D32]">R$ 10,00</span>
                   </div>
                 </div>
               </div>
@@ -411,7 +411,7 @@ export default function SuspectLP() {
             
             <div className="space-y-3">
               {[
-                { q: 'Como recebo o material?', a: 'Imediatamente após a confirmação do pagamento, enviamos as credenciais de acesso no seu e-mail cadastrado.' },
+                { q: 'Como recebo o material?', a: 'Você chama no WhatsApp, recebe o livro digital e pode testar as receitas antes de enviar os R$ 10,00.' },
                 { q: 'Funciona mesmo no celular?', a: 'Sim! O layout é 100% responsivo e otimizado para celulares, facilitando a consulta rápida na cozinha.' },
                 { q: 'Preciso de conhecimento culinário?', a: 'Não. Todas as receitas foram criadas para iniciantes, com instruções passo a passo simples e ingredientes acessíveis.' },
                 { q: 'O acesso expira?', a: 'Não. O seu acesso é permanente e vitalício, permitindo que você consulte o método quando quiser.' }
@@ -432,7 +432,7 @@ export default function SuspectLP() {
             <div className="space-y-1">
               <span className="text-[9px] text-[#2E7D32] font-black uppercase tracking-widest">Acesso Imediato</span>
               <h3 className="font-black text-gray-900 text-base">Quero Começar Agora</h3>
-              <p className="text-xs text-gray-500 font-semibold">Receber meu acesso imediato por apenas <span className="text-gray-900 font-black">R$ 27,90</span>.</p>
+              <p className="text-xs text-gray-500 font-semibold">Receba o livro pelo WhatsApp, teste as receitas e pague <span className="text-gray-900 font-black">R$ 10,00</span> se gostar.</p>
             </div>
 
             <motion.button
@@ -440,7 +440,7 @@ export default function SuspectLP() {
               onClick={handleCheckout}
               className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white py-4 px-6 rounded-2xl font-black text-sm shadow-md transition-all flex items-center justify-center gap-1.5 group animate-pulse"
             >
-              <span>RECEBER MEU ACESSO AGORA</span>
+              <span>RECEBER PELO WHATSAPP</span>
               <ChevronRight className="w-4.5 h-4.5 group-hover:translate-x-0.5 transition-transform" />
             </motion.button>
             
@@ -455,7 +455,7 @@ export default function SuspectLP() {
         {/* Rodapé do Portal */}
         <footer className="py-6 px-6 bg-white border-t border-[#F0E8DC] text-center shrink-0 space-y-2">
           <p className="text-[9px] text-gray-400 leading-normal font-semibold">
-            Este site representa a análise do Método Viver Sem Lactose e não substitui o diagnóstico médico especializado.
+            Este material é educativo e não substitui orientação médica ou nutricional individual.
           </p>
           <p className="text-[9px] text-gray-400 font-medium">
             © 2026 Portal Saúde • LactoClean. Todos os direitos reservados.

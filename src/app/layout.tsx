@@ -8,9 +8,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Teste de Sensibilidade Alimentar - Quiz",
-  description: "Descubra se seus sintomas digestivos recorrentes como gases e inchaço podem estar associados à intolerância a algum alimento e veja dicas práticas.",
+  title: "Receitas Sem Lactose - Quiz de Rotina Alimentar",
+  description: "Responda um quiz rápido sobre sua rotina com leite e derivados e veja um plano prático com receitas sem lactose para o dia a dia.",
 };
+
+const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
 export default function RootLayout({
   children,
@@ -20,10 +22,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
-        {/* Meta Pixel Code Placeholder */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
+        {metaPixelId && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
               !function(f,b,e,v,n,t,s)
               {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
               n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -32,10 +34,11 @@ export default function RootLayout({
               t.src=v;s=b.getElementsByTagName(e)[0];
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '1234567890'); // Substituir pelo Pixel ID real
+              fbq('init', '${metaPixelId}');
             `,
-          }}
-        />
+            }}
+          />
+        )}
       </head>
       <body className="min-h-full flex flex-col font-sans bg-[#F7F7F7]" suppressHydrationWarning>
         {children}

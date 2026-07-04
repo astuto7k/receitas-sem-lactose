@@ -59,9 +59,9 @@ export default function ThankYouPage() {
   }
 
   const itemsBought = [
-    { name: 'Guia +200 Receitas Sem Lactose', price: 27.90, bought: true },
+    { name: 'Guia +200 Receitas Sem Lactose', price: 10.00, bought: true },
     { name: 'Guia Sobremesas Sem Lactose', price: 9.90, bought: session.order_bump_selected },
-    { name: 'Receitas Anti-inflamatórias', price: 27.00, bought: session.upsell1_purchased },
+    { name: 'Receitas Leves Sem Lactose', price: 27.00, bought: session.upsell1_purchased },
     { name: 'Plano Alimentar Intestino Sensível', price: 37.00, bought: session.upsell2_purchased },
   ].filter(item => item.bought);
 
@@ -124,7 +124,7 @@ export default function ThankYouPage() {
             </h4>
             <ol className="list-decimal list-inside text-[11px] text-gray-600 space-y-1.5 pl-1 leading-relaxed font-medium">
               <li>Acesse seu aplicativo de e-mail (o mesmo usado no checkout).</li>
-              <li>Procure pela mensagem com o assunto: <strong>"Seu Acesso: Receitas Sem Lactose"</strong>.</li>
+              <li>Procure pela mensagem com o assunto: <strong>&quot;Seu Acesso: Receitas Sem Lactose&quot;</strong>.</li>
               <li>Clique no link enviado para fazer o download direto dos PDFs no seu celular ou computador.</li>
             </ol>
           </div>

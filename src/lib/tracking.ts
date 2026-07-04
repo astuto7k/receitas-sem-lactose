@@ -225,7 +225,7 @@ export function trackStepTransition(nextStep: string, answersToMerge?: Record<st
   if (nextStep === 'q1_split' || nextStep === 'q1') {
     trackPixel('ViewContent', { content_name: 'Quiz Sem Lactose - Iniciado' });
   } else if (nextStep === 'result' || nextStep === 'offer') {
-    trackPixel('ViewContent', { content_name: 'Quiz Sem Lactose - Oferta Exibida', value: 27.90, currency: 'BRL' });
+    trackPixel('ViewContent', { content_name: 'Quiz Sem Lactose - Oferta Exibida', value: 10.00, currency: 'BRL' });
   }
 
   return session;
@@ -241,7 +241,7 @@ export function trackInitiateCheckout(orderBumpSelected: boolean = false) {
   session.current_step = 'checkout';
   session.updated_at = new Date().toISOString();
 
-  const price = 27.90 + (orderBumpSelected ? 9.90 : 0);
+  const price = 10.00 + (orderBumpSelected ? 9.90 : 0);
 
   saveSessionLocally(session);
   syncSessionWithDatabase(session);
@@ -265,7 +265,7 @@ export function trackPurchase(orderBumpSelected: boolean) {
   session.order_bump_selected = orderBumpSelected;
   session.current_step = 'purchased';
   
-  const mainPrice = 27.90;
+  const mainPrice = 10.00;
   const bumpPrice = orderBumpSelected ? 9.90 : 0;
   session.revenue = mainPrice + bumpPrice;
   session.updated_at = new Date().toISOString();
@@ -297,7 +297,7 @@ export function trackUpsell1(purchased: boolean) {
     trackPixel('Purchase', {
       value: 27.00,
       currency: 'BRL',
-      content_name: 'Upsell 1 - Receitas Anti-inflamatorias',
+      content_name: 'Upsell 1 - Receitas Leves Sem Lactose',
       content_ids: ['upsell-1']
     });
   }

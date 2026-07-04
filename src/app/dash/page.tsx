@@ -235,7 +235,7 @@ export default function AdminDashboard() {
                         if (rand > 0.90) { // Purchase
                           current_step = 'thank-you';
                           purchased = true;
-                          revenue = 27.90 + (order_bump_selected ? 9.90 : 0);
+                          revenue = 10.00 + (order_bump_selected ? 9.90 : 0);
                           
                           if (Math.random() > 0.75) { 
                             upsell1_purchased = true;

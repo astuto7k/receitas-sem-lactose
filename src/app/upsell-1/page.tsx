@@ -58,11 +58,11 @@ export default function Upsell1Page() {
               <FlameKindling className="w-6 h-6" />
             </div>
             <div className="space-y-1">
-              <h3 className="font-extrabold text-gray-900 text-base">Receitas Anti-inflamatórias</h3>
-              <p className="text-xs text-gray-500 font-semibold">O guia definitivo para desinflamar seu intestino</p>
+              <h3 className="font-extrabold text-gray-900 text-base">Receitas Leves para a Rotina</h3>
+              <p className="text-xs text-gray-500 font-semibold">Ideias extras para variar o cardápio sem lactose</p>
             </div>
             <p className="text-xs text-gray-600 leading-relaxed">
-              Muitos desconfortos abdominais persistentes estão diretamente ligados à inflamação silenciosa do trato digestivo. Pequenas mudanças nutricionais podem acelerar seu bem-estar.
+              Quando você tem mais opções prontas, fica mais fácil manter uma rotina alimentar simples, saborosa e sem depender de produtos caros.
             </p>
           </div>
 
@@ -71,10 +71,10 @@ export default function Upsell1Page() {
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center">O que você vai receber:</p>
             <ul className="space-y-2 text-xs text-gray-700 font-medium">
               {[
-                'Guia com alimentos altamente anti-inflamatórios.',
+                'Guia com ingredientes leves e fáceis de encontrar.',
                 '35 receitas rápidas e saborosas para o dia a dia.',
-                'Como reduzir o inchaço e a retenção de líquidos.',
-                'Chás e sucos terapêuticos para alívio imediato.'
+                'Combinações práticas para variar o cardápio.',
+                'Bebidas e lanches simples para o dia a dia.'
               ].map((item, idx) => (
                 <li key={idx} className="flex items-center gap-2 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
                   <CheckCircle className="w-4 h-4 text-[#2E7D32] shrink-0" />
